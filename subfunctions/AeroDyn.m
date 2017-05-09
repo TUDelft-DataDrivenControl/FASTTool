@@ -43,9 +43,9 @@ fprintf(fid, '          2   InCol_Cl           - The column in the airfoil table
 fprintf(fid, '          3   InCol_Cd           - The column in the airfoil tables that contains the drag coefficient (-)\n');
 fprintf(fid, '          4   InCol_Cm           - The column in the airfoil tables that contains the pitching-moment coefficient; use zero if there is no Cm column (-)\n');
 fprintf(fid, '          0   InCol_Cpmin        - The column in the airfoil tables that contains the Cpmin coefficient; use zero if there is no Cpmin column (-)\n');
-fprintf(fid, '          8   NumAFfiles         - Number of airfoil files used (-)\n');
+fprintf(fid, '          %i   NumAFfiles         - Number of airfoil files used (-)\n', length(Blade.IFoil));
 fprintf(fid, '"%s"                         AFNames            - Airfoil file names (NumAFfiles lines) (quoted strings)\n', 'AeroDyn_Cylinder 1.dat');
-for i = 2:max(Blade.IFoil)
+for i = 2:length(Blade.IFoil)
     fprintf(fid, '"%s"\n', ['AeroDyn_', Airfoil.Name{Blade.IFoil(i)}, '.dat']);
 end
 fprintf(fid, '======  Rotor/Blade Properties  =====================================================================\n');
