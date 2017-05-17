@@ -30,13 +30,13 @@ Control = varargin{6};
 
 % Find rated wind speed
 disp('Gathering data...')
-TSR = 0:0.1:20;
-CP = zeros(size(TSR));
-for i = 2:length(TSR)
+TSRi = 0:0.1:20;
+CP = zeros(size(TSRi));
+for i = 2:length(TSRi)
 
     % Local tip speed ratio and solidity
     r = Blade.Radius/Blade.Radius(end);
-    lambdar = TSR(i) * r;
+    lambdar = TSRi(i) * r;
     sigmar = Blade.Number*Blade.Chord./(2*pi*Blade.Radius);
 
     % Initial induction factors
@@ -82,7 +82,7 @@ for i = 2:length(TSR)
         if max(abs(anew - a)) < 0.01 && max(abs(a_new - a_)) < 0.002
 
             % Power coefficient
-            dCP = (8*(lambdar-[0; lambdar(1:end-1)])./TSR(i)^2).*F.*sin(phi).^2.*(cos(phi)-lambdar.*sin(phi)).*(sin(phi)+lambdar.*cos(phi)).*(1-(Cd./Cl).*(cot(phi))).*lambdar.^2;
+            dCP = (8*(lambdar-[0; lambdar(1:end-1)])./TSRi(i)^2).*F.*sin(phi).^2.*(cos(phi)-lambdar.*sin(phi)).*(sin(phi)+lambdar.*cos(phi)).*(1-(Cd./Cl).*(cot(phi))).*lambdar.^2;
             CP(i) = real(sum(dCP(~isnan(dCP))));
 
             break
@@ -96,6 +96,9 @@ for i = 2:length(TSR)
 
 end
 
+% Define wind speeds
+WindSpeeds = 0:0.1:(5*ceil(Control.WindSpeed.Cutout/5) + 5);
+
 % RPM range
 TSRopt = TSRi(CP==max(CP));
 TSRopt = TSRopt(1);
@@ -106,17 +109,17 @@ RPM(WindSpeeds < Control.WindSpeed.Cutin) = 0;
 RPM(WindSpeeds > Control.WindSpeed.Cutout) = 0;
 
 % Power coefficients over the operating range
-WindSpeeds = 0:0.1:(5*ceil(Control.WindSpeed.Cutout/5) + 5);
 TSR = RPM*(2*pi/60)*Blade.Radius(end)./WindSpeeds;
 CP = interp1(TSRi, CP, TSR);
 
 % Rated power
 Prated = Control.Torque.SpeedC*(2*pi/60) *  Control.Torque.Demanded * Drivetrain.Gearbox.Efficiency * Drivetrain.Generator.Efficiency;
+P = 0.5 * 1.225 * pi*Blade.Radius(end)^2 * WindSpeeds.^3 .* CP .* Drivetrain.Gearbox.Efficiency .* Drivetrain.Generator.Efficiency;
 
 % Find rated wind speed
 Urated = min(WindSpeeds(P >= Prated));
 CPmax = max(CP);
-TSR_opt = TSR(CP == CPmax);
+TSR_opt = TSR(find(CP == CPmax, 1));
 
 % Drive train
 SpeedRange = [Control.Torque.SpeedB, Control.Torque.SpeedC]/Drivetrain.Gearbox.Ratio;
@@ -128,7 +131,7 @@ end
 
 % Update tables
 set(handles.Performance, 'Data', { ...
-    'Rated power:', [num2str(Drivetrain.Generator.Power/1e6, '%2.1f'), ' MW']; ...
+    'Rated power:', [num2str(Prated/1e6, '%2.1f'), ' MW']; ...
     'Cut-in wind speed:', [num2str(Control.WindSpeed.Cutin, '%2.1f'), ' m/s']; ...
     'Rated wind speed:', [num2str(Urated, '%2.1f'), ' m/s']; ...
     'Cut-out wind speed:', [num2str(Control.WindSpeed.Cutout, '%2.1f'), ' m/s']; ...
