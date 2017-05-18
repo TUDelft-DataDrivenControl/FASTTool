@@ -3009,7 +3009,7 @@ TSR = RPM*(2*pi/60)*Blade.Radius(end)./U;
 CP = interp1(TSRi, CP, TSR);
 
 % Rated power
-Prated = Control.Torque.SpeedC*(2*pi/60) *  Control.Torque.Demanded * Drivetrain.Gearbox.Efficiency * Drivetrain.Generator.Efficiency;
+Prated = Control.Torque.SpeedC*(2*pi/60) *  Control.Torque.Demanded * Drivetrain.Generator.Efficiency;
 
 % Power curve
 P = 0.5 * 1.225 * pi*Blade.Radius(end)^2 * U.^3 .* CP .* Drivetrain.Gearbox.Efficiency .* Drivetrain.Generator.Efficiency;
