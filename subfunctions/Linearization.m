@@ -222,7 +222,7 @@ for i = 2:length(TSRi)
         F = 2/pi * acos(exp(-Blade.Number/2*(1-r)./(r.*sin(phi))));
 
         % Aerodynamic force coefficients
-        alpha = phi*180/pi - Control.Pitch.Fine - Blade.Twist;
+        alpha = phi*180/pi - Blade.Twist - Control.Pitch.Fine;
         for j = 1:length(Blade.Radius)
             [~,ia] = unique(Airfoil.Alpha{Blade.IFoil(Blade.NFoil(j))});
             Cl(j) = interp1(Airfoil.Alpha{Blade.IFoil(Blade.NFoil(j))}(ia), Airfoil.Cl{Blade.IFoil(Blade.NFoil(j))}(ia), alpha(j));
@@ -278,14 +278,15 @@ TSR = RPM*(2*pi/60)*Blade.Radius(end)./WindSpeeds;
 CP_U = interp1(TSRi, CP, TSR);
 
 % Rated power
-Prated = Control.Torque.SpeedC*(2*pi/60) *  Control.Torque.Demanded * Drivetrain.Gearbox.Efficiency * Drivetrain.Generator.Efficiency;
+%Prated = Control.Torque.SpeedC*(2*pi/60) *  Control.Torque.Demanded * Drivetrain.Gearbox.Efficiency * Drivetrain.Generator.Efficiency;
+Prated = Control.Torque.SpeedC*(2*pi/60) *  Control.Torque.Demanded * Drivetrain.Generator.Efficiency;
 
 % Preliminary power curve
 P = 0.5 * 1.225 * pi*Blade.Radius(end)^2 * WindSpeeds.^3 .* CP_U .* Drivetrain.Gearbox.Efficiency .* Drivetrain.Generator.Efficiency;
 
 % Pitch range
 disp('Finding pitch angles...')
-PitchAngle = zeros(size(WindSpeeds));
+PitchAngle = Control.Pitch.Fine*ones(size(WindSpeeds));
 for u = 1:length(WindSpeeds)
     
     if P(u) >= Prated
@@ -318,7 +319,7 @@ for u = 1:length(WindSpeeds)
             F = 2/pi * acos(exp(-Blade.Number/2*(1-r)./(r.*sin(phi))));
 
             % Aerodynamic force coefficients
-            alpha = phi*180/pi - Pitch(i) - Control.Pitch.Fine - Blade.Twist;
+            alpha = phi*180/pi - Pitch(i) - Blade.Twist - Control.Pitch.Fine;
             for k = 1:length(Blade.Radius)
                 [~,ia] = unique(Airfoil.Alpha{Blade.IFoil(Blade.NFoil(k))});
                 Cl(k) = interp1(Airfoil.Alpha{Blade.IFoil(Blade.NFoil(k))}(ia), Airfoil.Cl{Blade.IFoil(Blade.NFoil(k))}(ia), alpha(k));
@@ -394,7 +395,7 @@ Drivetrain.Generator.HSSInertia = 534.116 * (Prated/(5e6))^(5/3) * (12.1*97/Cont
 disp('Writing input files...')
 
 % Simulink settings
-TMax = 30;
+TMax = 60;
 FAST_InputFileName = [pwd, '\subfunctions\inputfiles\FAST.fst'];
 
 % Turbine input files
@@ -449,7 +450,7 @@ for j = 1:length(WindSpeeds)
     sysm{j} = ss(data.A,data.B,data.C,data.D,'InputName',data.u_desc,'Outputname',data.y_desc);
     Lin.V(j) = data.y_op{1};
     Lin.Torque(j) = data.y_op{5};
-    Lin.Pitch(j) = (Control.Pitch.Fine + data.y_op{34})*pi/180;
+    Lin.Pitch(j) =  data.y_op{34}*pi/180;
     Lin.GSpeed(j) = data.y_op{33}*pi/30;
     Lin.RSpeed(j) = data.y_op{38}*pi/30;
     
