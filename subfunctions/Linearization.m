@@ -55,6 +55,7 @@ end
 set(handles.WindSpeed_From, 'String', '5')
 set(handles.WindSpeed_To, 'String', '25')
 set(handles.WindSpeed_Step, 'String', '1')
+set(handles.LinAmount, 'String', '1')
 
 % Update handles structure
 guidata(hObject, handles);
@@ -152,6 +153,7 @@ WindSpeeds = str2double(get(handles.WindSpeed_From, 'String')):str2double(get(ha
 if sum(WindSpeeds) == 0 || isnan(sum(WindSpeeds))
     errordlg('Invalid wind speed range.', 'Error')
 else
+LinAmount = str2double(get(handles.LinAmount, 'String'));
 set(hObject, 'Enable', 'off');
 
 disp('Starting linearization...')
@@ -395,7 +397,7 @@ Drivetrain.Generator.HSSInertia = 534.116 * (Prated/(5e6))^(5/3) * (12.1*97/Cont
 disp('Writing input files...')
 
 % Simulink settings
-TMax = 60;
+TSim = 60;
 FAST_InputFileName = [pwd, '\subfunctions\inputfiles\FAST.fst'];
 
 % Turbine input files
@@ -417,8 +419,10 @@ for j = 1:length(WindSpeeds)
     ElastoDyn(Blade,Tower,Nacelle,Drivetrain,Control,'Linearize',RPM(j),PitchAngle(j));
     
     % Set linearization times for 10 deg azimuth step (after 30 s)
-%     LinTimes = 30 + Control.DT * round((10:10:120)/(RPM(j)*6) / Control.DT);
-    LinTimes = TMax;
+    LinAziPositions = linspace(0,360/Blade.Number,LinAmount+1);
+    LinTimes = TSim + Control.DT * round(LinAziPositions(2:end)/(RPM(j)*6) / Control.DT);
+    TMax = max(LinTimes);
+    
     FASTinput(Control.DT, TMax, 'Linearize', LinTimes);
 
     % Wind input file
@@ -430,30 +434,27 @@ for j = 1:length(WindSpeeds)
     assignin('base', 'FAST_InputFileName', FAST_InputFileName);
     evalc('sim(''OpenLoop'',TMax);');
 
-    % Extract steady state solution after 30 seconds and average over 12
-    % steps
-%     A = 0;
-%     B = 0;
-%     C = 0;
-%     D = 0;
-%     for i = 1:12
-%         LinName = [pwd, '\subfunctions\inputfiles\FAST.SFunc.', int2str(i), '.lin'];
-%         data = ReadFASTLinear(LinName);
-%         A = A + 1/12 * data.A;
-%         B = B + 1/12 * data.B;
-%         C = C + 1/12 * data.C;
-%         D = D + 1/12 * data.D;
-%     end
-%     sysm{j} = ss(A,B,C,D,'InputName',data.u_desc,'Outputname',data.y_desc);
-    LinName = [pwd, '\subfunctions\inputfiles\FAST.SFunc.1.lin'];
-    data = ReadFASTLinear(LinName);
-    sysm{j} = ss(data.A,data.B,data.C,data.D,'InputName',data.u_desc,'Outputname',data.y_desc);
+% Extract steady state solution after 60 seconds and average over 36
+% steps
+    A = 0;
+    B = 0;
+    C = 0;
+    D = 0;
+    for i = 1:LinAmount
+        LinName = [pwd, '\subfunctions\inputfiles\FAST.SFunc.', int2str(i), '.lin'];
+        data = ReadFASTLinear(LinName);
+        A = A + 1/LinAmount * data.A;
+        B = B + 1/LinAmount * data.B;
+        C = C + 1/LinAmount * data.C;
+        D = D + 1/LinAmount * data.D;
+    end
+    sysm{j} = ss(A,B,C,D,'InputName',data.u_desc,'Outputname',data.y_desc);
+    
     Lin.V(j) = data.y_op{1};
     Lin.Torque(j) = data.y_op{5};
     Lin.Pitch(j) =  data.y_op{34}*pi/180;
     Lin.GSpeed(j) = data.y_op{33}*pi/30;
     Lin.RSpeed(j) = data.y_op{38}*pi/30;
-    
 end
 
 save(handles.LinModel, 'sysm', 'Lin');
@@ -468,7 +469,6 @@ end
 %% Wind speed steps
 function WindSpeed_From_Callback(hObject, eventdata, handles)
 function WindSpeed_From_CreateFcn(hObject, eventdata, handles)
-
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -479,6 +479,11 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 function WindSpeed_Step_Callback(hObject, eventdata, handles)
 function WindSpeed_Step_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+function LinAmount_Callback(hObject, eventdata, handles)
+function LinAmount_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
