@@ -56,6 +56,7 @@ set(handles.WindSpeed_From, 'String', '5')
 set(handles.WindSpeed_To, 'String', '25')
 set(handles.WindSpeed_Step, 'String', '1')
 set(handles.LinAmount, 'String', '1')
+set(handles.LinRotations, 'String', '1')
 
 % Update handles structure
 guidata(hObject, handles);
@@ -154,6 +155,7 @@ if sum(WindSpeeds) == 0 || isnan(sum(WindSpeeds))
     errordlg('Invalid wind speed range.', 'Error')
 else
 LinAmount = str2double(get(handles.LinAmount, 'String'));
+LinRotations = str2double(get(handles.LinRotations, 'String'));
 set(hObject, 'Enable', 'off');
 
 disp('Starting linearization...')
@@ -419,7 +421,7 @@ for j = 1:length(WindSpeeds)
     ElastoDyn(Blade,Tower,Nacelle,Drivetrain,Control,'Linearize',RPM(j),PitchAngle(j));
     
     % Set linearization times for 10 deg azimuth step (after 30 s)
-    LinAziPositions = linspace(0,360/Blade.Number,LinAmount+1);
+    LinAziPositions = linspace(0,360*LinRotations,LinAmount+1);
     LinTimes = TSim + Control.DT * round(LinAziPositions(2:end)/(RPM(j)*6) / Control.DT);
     TMax = max(LinTimes);
     
@@ -484,6 +486,11 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 function LinAmount_Callback(hObject, eventdata, handles)
 function LinAmount_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+function LinRotations_Callback(hObject, eventdata, handles)
+function LinRotations_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
