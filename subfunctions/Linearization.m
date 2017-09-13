@@ -423,7 +423,7 @@ for j = 1:length(WindSpeeds)
     % Set linearization times for 10 deg azimuth step (after 30 s)
     LinAziPositions = linspace(0,360*LinRotations,LinAmount+1);
     LinTimes = TSim + Control.DT * round(LinAziPositions(2:end)/(RPM(j)*6) / Control.DT);
-    TMax = max(LinTimes);
+    TMax = max(LinTimes)+1.0;
     
     FASTinput(Control.DT, TMax, 'Linearize', LinTimes);
 

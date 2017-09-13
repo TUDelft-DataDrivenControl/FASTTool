@@ -3,11 +3,18 @@ function ElastoDyn(Blade,Tower,Nacelle,Drivetrain,Control,mode,varargin)
 %% Operating conditions
 RotSpeed = 0;
 BlPitch = 0;
+GenDOF = 'True';
+YawDOF = 'True';
+
 if length(varargin) >= 1
     RotSpeed = varargin{1};
 end
 if length(varargin) >= 2
     BlPitch = varargin{2};
+end
+if strcmp(mode, 'Linearize')
+    GenDOF = 'True';
+    YawDOF = 'False';
 end
 
 %% ElastoDyn input file
@@ -26,8 +33,8 @@ fprintf(fid, 'True          FlapDOF2    - Second flapwise blade mode DOF (flag)\
 fprintf(fid, 'True          EdgeDOF     - First edgewise blade mode DOF (flag)\n');
 fprintf(fid, 'False         TeetDOF     - Rotor-teeter DOF (flag) [unused for 3 blades]\n');
 fprintf(fid, 'True          DrTrDOF     - Drivetrain rotational-flexibility DOF (flag)\n');
-fprintf(fid, 'True          GenDOF      - Generator DOF (flag)\n');
-fprintf(fid, 'True          YawDOF      - Yaw DOF (flag)\n');
+fprintf(fid, '%s          GenDOF      - Generator DOF (flag)\n', GenDOF);
+fprintf(fid, '%s          YawDOF      - Yaw DOF (flag)\n', YawDOF);
 fprintf(fid, 'True          TwFADOF1    - First fore-aft tower bending-mode DOF (flag)\n');
 fprintf(fid, 'True          TwFADOF2    - Second fore-aft tower bending-mode DOF (flag)\n');
 fprintf(fid, 'True          TwSSDOF1    - First side-to-side tower bending-mode DOF (flag)\n');
