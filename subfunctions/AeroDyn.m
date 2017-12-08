@@ -17,9 +17,9 @@ fprintf(fid, 'False         Echo               - Echo the input to "<rootname>.A
 fprintf(fid, '"default"     DTAero             - Time interval for aerodynamic calculations {or "default"} (s)\n');
 fprintf(fid, '          %i   WakeMod            - Type of wake/induction model (switch) {0=none, 1=BEMT}\n', WakeMod);
 fprintf(fid, '          %i   AFAeroMod          - Type of blade airfoil aerodynamics model (switch) {1=steady model, 2=Beddoes-Leishman unsteady model}\n', AFAeroMod);
-fprintf(fid, '          1   TwrPotent          - Type tower influence on wind based on potential flow around the tower (switch) {0=none, 1=baseline potential flow, 2=potential flow with Bak correction}\n');
+fprintf(fid, '          0  TwrPotent          - Type tower influence on wind based on potential flow around the tower (switch) {0=none, 1=baseline potential flow, 2=potential flow with Bak correction}\n');
 fprintf(fid, 'False          TwrShadow          – Calculate tower influence on wind based on downstream tower shadow? (flag)\n');
-fprintf(fid, 'True           TwrAero            - Calculate tower aerodynamic loads? (flag)\n');
+fprintf(fid, 'False           TwrAero            - Calculate tower aerodynamic loads? (flag)\n');
 fprintf(fid, 'False          FrozenWake         - Assume frozen wake during linearization? (flag) [used only when WakeMod=1 and when linearizing]\n');
 fprintf(fid, '======  Environmental Conditions  ===================================================================\n');
 fprintf(fid, '      1.225   AirDens            - Air density (kg/m^3)\n');
