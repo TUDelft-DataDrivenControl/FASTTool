@@ -450,7 +450,7 @@ for j = 1:length(WindSpeeds)
         C = C + 1/LinAmount * data.C;
         D = D + 1/LinAmount * data.D;
     end
-    sysm{j} = ss(A,B,C,D,'InputName',data.u_desc,'Outputname',data.y_desc);
+    sysm{j} = ss(A, B, C, D, 'InputName', data.u_desc,'Outputname', data.y_desc, 'StateName', data.x_desc);
     
     Lin.V(j) = data.y_op{1};
     Lin.Torque(j) = data.y_op{5};
