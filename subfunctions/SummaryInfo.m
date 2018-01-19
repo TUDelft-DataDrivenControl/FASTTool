@@ -28,98 +28,84 @@ Nacelle = varargin{4};
 Drivetrain = varargin{5};
 Control = varargin{6};
 
-% Find rated wind speed
-disp('Gathering data...')
-TSRi = 0:0.1:20;
-CP = zeros(size(TSRi));
-for i = 2:length(TSRi)
+% Find rated wind speed by comparing demanded torque at rotational speed C
+disp('Searching for rated wind speed...')
+OmegaC = Control.Torque.SpeedC*2*pi/60;
+U1 = Control.WindSpeed.Cutin;
+U2 = Control.WindSpeed.Cutout;
+[~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, (OmegaC/Drivetrain.Gearbox.Ratio)*Blade.Radius(end)/U1);
+Qr1 = 0.5*CQr*1.225*U1^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+[~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, (OmegaC/Drivetrain.Gearbox.Ratio)*Blade.Radius(end)/U2);
+Qr2 = 0.5*CQr*1.225*U2^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
 
-    % Local tip speed ratio and solidity
-    r = Blade.Radius/Blade.Radius(end);
-    lambdar = TSRi(i) * r;
-    sigmar = Blade.Number*Blade.Chord./(2*pi*Blade.Radius);
-
-    % Initial induction factors
-    anew = 1/3*ones(size(Blade.Radius));
-    a_new = zeros(size(Blade.Radius));
+if Qr1 > Control.Torque.Demanded
+    Urated = Control.WindSpeed.Cutin;
+elseif Qr2 < Control.Torque.Demanded
+    Urated = Control.WindSpeed.Cutout;
+else
+    success = false;
     for iter = 1:100
-
-        a = anew;
-        a_ = a_new;
-
-        % Inflow angle
-        phi = real(atan((1-a)./((1+a_).*lambdar)));
-
-        % Tip loss correction
-        F = 2/pi * acos(exp(-Blade.Number/2*(1-r)./(r.*sin(phi))));
-
-        % Aerodynamic force coefficients
-        alpha = phi*180/pi - Control.Pitch.Fine - Blade.Twist;
-        for j = 1:length(Blade.Radius)
-            [~,ia] = unique(Airfoil.Alpha{Blade.IFoil(Blade.NFoil(j))});
-            Cl(j) = interp1(Airfoil.Alpha{Blade.IFoil(Blade.NFoil(j))}(ia), Airfoil.Cl{Blade.IFoil(Blade.NFoil(j))}(ia), alpha(j));
-            Cd(j) = interp1(Airfoil.Alpha{Blade.IFoil(Blade.NFoil(j))}(ia), Airfoil.Cd{Blade.IFoil(Blade.NFoil(j))}(ia), alpha(j));
-        end
-        Cl = Cl(:);
-        Cd = Cd(:);
-        Cl(isnan(Cl)) = 1e-6;
-        Cd(isnan(Cd)) = 0;
-        Cl(Cl == 0) = 1e-6;
-
-        % Thrust coefficient
-        CT = sigmar.*(1-a).^2.*(Cl.*cos(phi)+Cd.*sin(phi))./(sin(phi).^2);
-
-        % New induction factors
-        for j = 1:length(Blade.Radius)
-            if CT(j) < 0.96
-                anew(j) = 1/(1+4*F(j)*sin(phi(j))^2/(sigmar(j)*Cl(j)*cos(phi(j))));
-            else
-                anew(j) = (1/F(j))*(0.143+sqrt(0.0203-0.6427*(0.889-CT(j))));
-            end
-        end
-        a_new = 1./(4*F.*cos(phi)./(sigmar.*Cl)-1);
-
-        if max(abs(anew - a)) < 0.01 && max(abs(a_new - a_)) < 0.002
-
-            % Power coefficient
-            dCP = (8*(lambdar-[0; lambdar(1:end-1)])./TSRi(i)^2).*F.*sin(phi).^2.*(cos(phi)-lambdar.*sin(phi)).*(sin(phi)+lambdar.*cos(phi)).*(1-(Cd./Cl).*(cot(phi))).*lambdar.^2;
-            CP(i) = real(sum(dCP(~isnan(dCP))));
-
+        U_new = U1 + abs((Control.Torque.Demanded-Qr1)/(Qr1-Qr2))*(U2-U1);
+        [~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, (OmegaC/Drivetrain.Gearbox.Ratio)*Blade.Radius(end)/U_new);
+        Qr_new = 0.5*CQr*1.225*U_new^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+        if abs((Qr_new - Control.Torque.Demanded)/Control.Torque.Demanded) < 0.005
+            success = true;
             break
         end
-
+        if Qr_new < Control.Torque.Demanded
+           U1 = U_new;
+           Qr1 = Qr_new;
+        else
+           U2 = U_new;
+           Qr2 = Qr_new;
+        end
     end
-
-    if CP(i) - CP(i-1) < 0
-        break
+    Urated = U_new;
+    if ~success
+        warning('Tolerance not met during iteration of axial induction factor')
     end
-
 end
 
-% Define wind speeds
-WindSpeeds = 0:0.1:(5*ceil(Control.WindSpeed.Cutout/5) + 5);
+% Find maximum power coefficient and corresponding tip speed ratio
+disp('Searching for maximum power coefficient and optimal tip speed ratio...')
+TSR1 = 1;
+TSR2 = 20;
+[~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, TSR1);
+CP1 = TSR1*CQr;
+[~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, TSR2);
+CP2 = TSR2*CQr;
 
-% RPM range
-TSRopt = TSRi(CP==max(CP));
-TSRopt = TSRopt(1);
-RPM = TSRopt*WindSpeeds/Blade.Radius(end) * 60/(2*pi);
-RPM(RPM < Control.Torque.SpeedB/Drivetrain.Gearbox.Ratio) = Control.Torque.SpeedB/Drivetrain.Gearbox.Ratio;
-RPM(RPM > Control.Torque.SpeedC/Drivetrain.Gearbox.Ratio) = Control.Torque.SpeedC/Drivetrain.Gearbox.Ratio;
-RPM(WindSpeeds < Control.WindSpeed.Cutin) = 0;
-RPM(WindSpeeds > Control.WindSpeed.Cutout) = 0;
+success = false;
+for iter = 1:100
+    TSR_new = (TSR1 + TSR2)/2;
+    [~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, TSR_new);
+    CP_new = TSR_new*CQr;
+    if abs((TSR2 - TSR_new)/TSR2) < 0.005
+        success = true;
+        break
+    end
+    if CP1 < CP2
+       TSR1 = TSR_new;
+       CP1 = CP_new;
+    else
+       TSR2 = TSR_new;
+       CP2 = CP_new;
+    end
+end
+CPmax = CP_new;
+if ((TSR_new - 1) / 1.01) < 0.005
+    OptimalTSR = '< 1';
+elseif ((20 - TSR_new) / 20) < 0.005
+    OptimalTSR = '> 20';
+else
+    OptimalTSR = num2str(TSR_new, '%2.1f');
+end
+if ~success
+    warning('Tolerance not met during iteration of axial induction factor')
+end
 
-% Power coefficients over the operating range
-TSR = RPM*(2*pi/60)*Blade.Radius(end)./WindSpeeds;
-CP = interp1(TSRi, CP, TSR);
-
-% Rated power
+% Determine rated electrical power
 Prated = Control.Torque.SpeedC*(2*pi/60) *  Control.Torque.Demanded * Drivetrain.Generator.Efficiency;
-P = 0.5 * 1.225 * pi*Blade.Radius(end)^2 * WindSpeeds.^3 .* CP .* Drivetrain.Gearbox.Efficiency .* Drivetrain.Generator.Efficiency;
-
-% Find rated wind speed
-Urated = min(WindSpeeds(P >= Prated));
-CPmax = max(CP);
-TSR_opt = TSR(find(CP == CPmax, 1));
 
 % Drive train
 SpeedRange = [Control.Torque.SpeedB, Control.Torque.SpeedC]/Drivetrain.Gearbox.Ratio;
@@ -131,12 +117,12 @@ end
 
 % Update tables
 set(handles.Performance, 'Data', { ...
-    'Rated power:', [num2str(Prated/1e6, '%2.1f'), ' MW']; ...
+    'Rated power:', [num2str(Prated/1e6, '%2.2f'), ' MW']; ...
     'Cut-in wind speed:', [num2str(Control.WindSpeed.Cutin, '%2.1f'), ' m/s']; ...
     'Rated wind speed:', [num2str(Urated, '%2.1f'), ' m/s']; ...
     'Cut-out wind speed:', [num2str(Control.WindSpeed.Cutout, '%2.1f'), ' m/s']; ...
     'Speed range:', [num2str(SpeedRange(1), '%2.1f'), ' - ', num2str(SpeedRange(2), '%2.1f'), ' rpm']; ...
-    'Optimal tip speed ratio:', num2str(TSR_opt, '%2.1f'); ...
+    'Optimal tip speed ratio:', OptimalTSR; ...
     'Peak power coefficient:', num2str(CPmax, '%2.3f')});
 set(handles.Configuration, 'Data', { ...
     'Number of blades:', int2str(Blade.Number); ...

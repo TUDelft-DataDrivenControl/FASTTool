@@ -2903,8 +2903,6 @@ PlotTurbine(handles,false)
 %% Plot steady operating curves
 function GenerateSteadyOp_Callback(hObject, eventdata, handles)
 
-disp('Generating steady operating curves...')
-
 % Stop animation
 if get(handles.Animate, 'Value')
     set(handles.Animate, 'Value', 0);
@@ -2916,145 +2914,13 @@ buttons = findall(handles.WindTurbineDesign, 'Type', 'UIControl');
 for i = 1:length(buttons)
     set(buttons(i), 'Enable', 'off');
 end
-pause(1)
 
-% Get geometry from handles
-Blade = handles.Blade;
-Airfoil = handles.Airfoil;
-Drivetrain = handles.Drivetrain;
-Control = handles.Control;
-
-% Cp-lambda curve
-TSRi = 0:0.1:20;
-CP = zeros(size(TSRi));
-CT = zeros(size(TSRi));
-disp('Looking for maximum power coefficient...')
-for i = 2:length(TSRi)
-
-    % Local tip speed ratio and solidity
-    r = Blade.Radius/Blade.Radius(end);
-    lambdar = TSRi(i) * r;
-    sigmar = Blade.Number*Blade.Chord./(2*pi*Blade.Radius);
-
-    % Initial induction factors
-    anew = 1/3*ones(size(Blade.Radius));
-    a_new = zeros(size(Blade.Radius));
-    for iter = 1:100
-
-        a = anew;
-        a_ = a_new;
-
-        % Inflow angle
-        phi = real(atan((1-a)./((1+a_).*lambdar)));
-
-        % Tip loss correction
-        F = 2/pi * acos(exp(-Blade.Number/2*(1-r)./(r.*sin(phi))));
-
-        % Aerodynamic force coefficients
-        alpha = phi*180/pi - Control.Pitch.Fine - Blade.Twist;
-        for j = 1:length(Blade.Radius)
-            [~,ia] = unique(Airfoil.Alpha{Blade.IFoil(Blade.NFoil(j))});
-            Cl(j) = interp1(Airfoil.Alpha{Blade.IFoil(Blade.NFoil(j))}(ia), Airfoil.Cl{Blade.IFoil(Blade.NFoil(j))}(ia), alpha(j));
-            Cd(j) = interp1(Airfoil.Alpha{Blade.IFoil(Blade.NFoil(j))}(ia), Airfoil.Cd{Blade.IFoil(Blade.NFoil(j))}(ia), alpha(j));
-        end
-        Cl = Cl(:);
-        Cd = Cd(:);
-        Cl(isnan(Cl)) = 1e-6;
-        Cd(isnan(Cd)) = 0;
-        Cl(Cl == 0) = 1e-6;
-
-        % Thrust per rotor annulus
-        CT = sigmar.*(1-a).^2.*(Cl.*cos(phi)+Cd.*sin(phi))./(sin(phi).^2);
-
-        % New induction factors
-        for j = 1:length(Blade.Radius)
-            if CT(j) < 0.96
-                anew(j) = 1/(1+4*F(j)*sin(phi(j))^2/(sigmar(j)*Cl(j)*cos(phi(j))));
-            else
-                anew(j) = (1/F(j))*(0.143+sqrt(0.0203-0.6427*(0.889-CT(j))));
-            end
-        end
-        a_new = 1./(4*F.*cos(phi)./(sigmar.*Cl)-1);
-
-        if max(abs(anew - a)) < 0.01 && max(abs(a_new - a_)) < 0.002
-
-            % Power coefficient
-            dCP = (8*(lambdar-[0; lambdar(1:end-1)])./TSRi(i)^2).*F.*sin(phi).^2.*(cos(phi)-lambdar.*sin(phi)).*(sin(phi)+lambdar.*cos(phi)).*(1-(Cd./Cl).*(cot(phi))).*lambdar.^2;
-            CP(i) = real(sum(dCP(~isnan(dCP))));
-
-            break
-        end
-
-    end
-
-    if CP(i) - CP(i-1) < 0
-        disp('Maximum found!')
-        break
-    end
-
-end
-
-% RPM range
-U = 0:0.1:(5*ceil(Control.WindSpeed.Cutout/5) + 5);
-TSRopt = TSRi(CP==max(CP));
-TSRopt = TSRopt(1);
-RPM = TSRopt*U/Blade.Radius(end) * 60/(2*pi);
-RPM(RPM < Control.Torque.SpeedB/Drivetrain.Gearbox.Ratio) = Control.Torque.SpeedB/Drivetrain.Gearbox.Ratio;
-RPM(RPM > Control.Torque.SpeedC/Drivetrain.Gearbox.Ratio) = Control.Torque.SpeedC/Drivetrain.Gearbox.Ratio;
-RPM(U < Control.WindSpeed.Cutin) = 0;
-RPM(U > Control.WindSpeed.Cutout) = 0;
-
-% Power coefficients over the operating range
-TSR = RPM*(2*pi/60)*Blade.Radius(end)./U;
-CP = interp1(TSRi, CP, TSR);
-
-% Rated power
-Prated = Control.Torque.SpeedC*(2*pi/60) *  Control.Torque.Demanded * Drivetrain.Generator.Efficiency;
-
-% Power curve
-P = 0.5 * 1.225 * pi*Blade.Radius(end)^2 * U.^3 .* CP .* Drivetrain.Gearbox.Efficiency .* Drivetrain.Generator.Efficiency;
-P(P > Prated) = Prated;
-CP = P ./ (0.5 * 1.225 * pi*Blade.Radius(end)^2 * U.^3 .* Drivetrain.Gearbox.Efficiency .* Drivetrain.Generator.Efficiency);
-CP(1) = 0;
-
-% Estimate thrust coefficient through induction factor
-ai = linspace(0,1/3,1e6);
-CPi = 4*ai.*(1-ai).^2;
-if max(CP) > 0
-    for i = 1:length(CP)
-        aj = ai(abs(CP(i)-CPi) == min(abs(CP(i)-CPi)));
-        a(i) = aj(1);
-    end
-else
-    a = 0;
-end
-CT = 4*a.*(1-a);
-T = 0.5 * 1.225 * pi*Blade.Radius(end)^2 * U(:).^2 .* CT(:);
-
-% Plot
-disp('Drawing plots...')
-Plot = figure();
-set(Plot, 'Name', 'Steady power curve')
-plot(U,P/1e6)
-xlim([0 max(U)])
-ylim([0 ceil(Prated/1e6)+0.5])
-set(gca, ...
-    'XMinorTick', 'on', ...
-    'YMinorTick', 'on', ...
-    'Box', 'on', ...
-    'Layer', 'top', ...
-    'Fontsize', 8);
-xlabel('Wind speed [m/s]')
-ylabel('Electrical power [MW]')
-
-% Send data to Matlab workspace
-assignin('base', 'WindSpeed', U(:));
-assignin('base', 'ElectricalPower', P(:));
-assignin('base', 'PowerCoefficient', CP(:));
-assignin('base', 'ThrustCoefficient', CT(:));
-assignin('base', 'RotorThrust', T(:));
-assignin('base', 'RotorSpeed', RPM(:));
-assignin('base', 'TipSpeedRatio', TSR(:));
+% Steady operation submenu
+GenerateSteadyOp(...
+    handles.Blade, ...
+    handles.Airfoil, ...
+    handles.Drivetrain, ...
+    handles.Control);
 
 % Enable window
 for i = 1:length(buttons)

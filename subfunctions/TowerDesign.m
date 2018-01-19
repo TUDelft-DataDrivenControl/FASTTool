@@ -41,8 +41,7 @@ set(handles.Hub_Height_textbox, 'String', num2str(handles.Tower.HubHeight));
 set(handles.Table, 'Data', ...
    [num2cell(handles.Tower.Height(:)), ...
     num2cell(handles.Tower.Diameter(:)), ...
-    num2cell(handles.Tower.Mass(:)), ...
-    num2cell(handles.Tower.EI(:))]);
+    num2cell(handles.Tower.ExtraMass(:))]);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -96,14 +95,12 @@ if handles.Save
     % Extract geometry from table
     Tower.Height = [];
     Tower.Diameter = [];
-    Tower.Mass = [];
-    Tower.EI = [];
+    Tower.ExtraMass = [];
     for i = 1:size(Table,1)
         if sum(invalid(i,:)) == 0
             Tower.Height = [Tower.Height; Table{i,1}];
             Tower.Diameter = [Tower.Diameter; Table{i,2}];
-            Tower.Mass = [Tower.Mass; Table{i,3}];
-            Tower.EI = [Tower.EI; Table{i,4}];
+            Tower.ExtraMass = [Tower.ExtraMass; Table{i,3}];
         end
     end
     Tower.BottomThickness = str2double(get(handles.Tower_BottomThickness_textbox, 'String'));
@@ -113,7 +110,10 @@ if handles.Save
     % Derived properties
     Tower.ShearModulus = 80.8e9;
     Tower.YoungsModulus = 210e9;
+    Tower.Density = 7850;
     Tower.WallThickness = linspace(Tower.BottomThickness,Tower.TopThickness,length(Tower.Height))';
+    Tower.Mass = Tower.Density * pi* (Tower.Diameter.^2 - (Tower.Diameter-2*Tower.WallThickness).^2) ./ 4 + Tower.ExtraMass;
+    Tower.EI = Tower.YoungsModulus * pi/64*(Tower.Diameter.^4 - (Tower.Diameter-2*Tower.WallThickness).^4);
     Tower.GJ = Tower.ShearModulus * pi/32*(Tower.Diameter.^4 - (Tower.Diameter-2*Tower.WallThickness).^4);
     Tower.EA = Tower.YoungsModulus * pi*Tower.Diameter.*Tower.WallThickness;
     Tower.Iner = 0.5 * Tower.Mass .* (Tower.Diameter/2 - Tower.WallThickness).^2;

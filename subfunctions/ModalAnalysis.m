@@ -148,6 +148,16 @@ for rpm = 1:length(handles.RPMs)
 
 end
 
+assignin('base', 'RotorSpeed', handles.RPMs(:));
+assignin('base', 'TowerForeAft1', handles.Tower_ForeAft1_freq(:));
+assignin('base', 'TowerForeAft2', handles.Tower_ForeAft2_freq(:));
+assignin('base', 'TowerSideSide1', handles.Tower_SideSide1_freq(:));
+assignin('base', 'TowerSideSide2', handles.Tower_SideSide2_freq(:));
+assignin('base', 'BladeFlapwise1', handles.Blade_Flap1_freq(:));
+assignin('base', 'BladeFlapwise2', handles.Blade_Flap2_freq(:));
+assignin('base', 'BladeEdgewise1', handles.Blade_Edge1_freq(:));
+assignin('base', 'BladeEdgewise2', handles.Blade_Edge2_freq(:));
+
 % Enable window
 for i = 1:length(buttons)
     set(buttons(i), 'Enable', 'on');

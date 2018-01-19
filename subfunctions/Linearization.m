@@ -154,9 +154,26 @@ WindSpeeds = str2double(get(handles.WindSpeed_From, 'String')):str2double(get(ha
 if sum(WindSpeeds) == 0 || isnan(sum(WindSpeeds))
     errordlg('Invalid wind speed range.', 'Error')
 else
+% Disable window
+buttons = findall(handles.Linearization, 'Type', 'UIControl');
+for j = 1:length(buttons)
+    set(buttons(j), 'Enable', 'off');
+end
+pause(0.1)
+
+if handles.Drivetrain.Generator.HSSInertia == 534.116
+    button = questdlg('Warning: Generator inertia must be large enough','Warning','Continue','Cancel','Continue');
+    if ~strcmp(button, 'Continue')
+        % Enable window
+        for j = 1:length(buttons)
+            set(buttons(j), 'Enable', 'on');
+        end
+        return
+    end
+end
+
 LinAmount = str2double(get(handles.LinAmount, 'String'));
 LinRotations = str2double(get(handles.LinRotations, 'String'));
-set(hObject, 'Enable', 'off');
 
 disp('Starting linearization...')
 disp(' ')
@@ -198,202 +215,25 @@ Blade.Flap2_coeff = y12_coeff;
 Blade.Edge1_coeff = y21_coeff;
 Blade.Edge2_coeff = y22_coeff;
 
-% Run steady BEM to find RPM range
-disp('Looking for operating rotor speeds and trim cases...')
-
-% Cp-lambda curve
-TSRi = 0.1:0.1:20;
-CP = zeros(size(TSRi));
-for i = 2:length(TSRi)
-
-    % Local tip speed ratio and solidity
-    r = Blade.Radius/Blade.Radius(end);
-    lambdar = TSRi(i) * r;
-    sigmar = Blade.Number*Blade.Chord./(2*pi*Blade.Radius);
-
-    % Initial induction factors
-    anew = 1/3*ones(size(Blade.Radius));
-    a_new = zeros(size(Blade.Radius));
-    for iter = 1:100
-
-        a = anew;
-        a_ = a_new;
-
-        % Inflow angle
-        phi = real(atan((1-a)./((1+a_).*lambdar)));
-
-        % Tip loss correction
-        F = 2/pi * acos(exp(-Blade.Number/2*(1-r)./(r.*sin(phi))));
-
-        % Aerodynamic force coefficients
-        alpha = phi*180/pi - Blade.Twist - Control.Pitch.Fine;
-        for j = 1:length(Blade.Radius)
-            [~,ia] = unique(Airfoil.Alpha{Blade.IFoil(Blade.NFoil(j))});
-            Cl(j) = interp1(Airfoil.Alpha{Blade.IFoil(Blade.NFoil(j))}(ia), Airfoil.Cl{Blade.IFoil(Blade.NFoil(j))}(ia), alpha(j));
-            Cd(j) = interp1(Airfoil.Alpha{Blade.IFoil(Blade.NFoil(j))}(ia), Airfoil.Cd{Blade.IFoil(Blade.NFoil(j))}(ia), alpha(j));
-        end
-        Cl = Cl(:);
-        Cd = Cd(:);
-        Cl(isnan(Cl)) = 1e-6;
-        Cd(isnan(Cd)) = 0;
-        Cl(Cl == 0) = 1e-6;
-
-        % Thrust per rotor annulus
-        CT = sigmar.*(1-a).^2.*(Cl.*cos(phi)+Cd.*sin(phi))./(sin(phi).^2);
-
-        % New induction factors
-        for j = 1:length(Blade.Radius)
-            if CT(j) < 0.96
-                anew(j) = 1/(1+4*F(j)*sin(phi(j))^2/(sigmar(j)*Cl(j)*cos(phi(j))));
-            else
-                anew(j) = (1/F(j))*(0.143+sqrt(0.0203-0.6427*(0.889-CT(j))));
-            end
-        end
-        a_new = 1./(4*F.*cos(phi)./(sigmar.*Cl)-1);
-
-        if max(abs(anew - a)) < 0.01 && max(abs(a_new - a_)) < 0.002
-
-            % Power coefficient
-            dCP = (8*(lambdar-[0; lambdar(1:end-1)])./TSRi(i)^2).*F.*sin(phi).^2.*(cos(phi)-lambdar.*sin(phi)).*(sin(phi)+lambdar.*cos(phi)).*(1-(Cd./Cl).*(cot(phi))).*lambdar.^2;
-            CP(i) = real(sum(dCP(~isnan(dCP))));
-
-            break
-        end
-
-    end
-
-    if CP(i) - CP(i-1) < 0
-        break
-    end
-
-end
-
-% RPM range
-TSRopt = TSRi(CP==max(CP));
-TSRopt = TSRopt(1);
-RPM = TSRopt*WindSpeeds/Blade.Radius(end) * 60/(2*pi);
-RPM(RPM < Control.Torque.SpeedB/Drivetrain.Gearbox.Ratio) = Control.Torque.SpeedB/Drivetrain.Gearbox.Ratio;
-RPM(RPM > Control.Torque.SpeedC/Drivetrain.Gearbox.Ratio) = Control.Torque.SpeedC/Drivetrain.Gearbox.Ratio;
-RPM(WindSpeeds < Control.WindSpeed.Cutin) = 0;
-RPM(WindSpeeds > Control.WindSpeed.Cutout) = 0;
-
-% Power coefficients over the operating range
-TSR = RPM*(2*pi/60)*Blade.Radius(end)./WindSpeeds;
-CP_U = interp1(TSRi, CP, TSR);
-
-% Rated power
-%Prated = Control.Torque.SpeedC*(2*pi/60) *  Control.Torque.Demanded * Drivetrain.Gearbox.Efficiency * Drivetrain.Generator.Efficiency;
-Prated = Control.Torque.SpeedC*(2*pi/60) *  Control.Torque.Demanded * Drivetrain.Generator.Efficiency;
-
-% Preliminary power curve
-P = 0.5 * 1.225 * pi*Blade.Radius(end)^2 * WindSpeeds.^3 .* CP_U .* Drivetrain.Gearbox.Efficiency .* Drivetrain.Generator.Efficiency;
-
-% Pitch range
-disp('Finding pitch angles...')
-PitchAngle = Control.Pitch.Fine*ones(size(WindSpeeds));
-for u = 1:length(WindSpeeds)
-    
-    if P(u) >= Prated
-    
-    if u > 1
-        Pitch = 0.1*floor(10*PitchAngle(u-1)):0.1:45;
-    else
-        Pitch = 0:0.1:45;
-    end
-    Pi = nan(size(Pitch));
-    for i = 1:length(Pitch)
-
-        % Local tip speed ratio and solidity
-        r = Blade.Radius/Blade.Radius(end);
-        lambdar = TSR(u) * r;
-        sigmar = Blade.Number*Blade.Chord./(2*pi*Blade.Radius);
-
-        % Initial induction factors
-        anew = 1/3*ones(size(Blade.Radius));
-        a_new = zeros(size(Blade.Radius));
-        for iter = 1:100
-
-            a = anew;
-            a_ = a_new;
-
-            % Inflow angle
-            phi = real(atan((1-a)./((1+a_).*lambdar)));
-
-            % Tip loss correction
-            F = 2/pi * acos(exp(-Blade.Number/2*(1-r)./(r.*sin(phi))));
-
-            % Aerodynamic force coefficients
-            alpha = phi*180/pi - Pitch(i) - Blade.Twist - Control.Pitch.Fine;
-            for k = 1:length(Blade.Radius)
-                [~,ia] = unique(Airfoil.Alpha{Blade.IFoil(Blade.NFoil(k))});
-                Cl(k) = interp1(Airfoil.Alpha{Blade.IFoil(Blade.NFoil(k))}(ia), Airfoil.Cl{Blade.IFoil(Blade.NFoil(k))}(ia), alpha(k));
-                Cd(k) = interp1(Airfoil.Alpha{Blade.IFoil(Blade.NFoil(k))}(ia), Airfoil.Cd{Blade.IFoil(Blade.NFoil(k))}(ia), alpha(k));
-            end
-            Cl = Cl(:);
-            Cd = Cd(:);
-            Cl(isnan(Cl)) = 1e-6;
-            Cd(isnan(Cd)) = 0;
-            Cl(Cl == 0) = 1e-6;
-
-            % Thrust per rotor annulus
-            CT = sigmar.*(1-a).^2.*(Cl.*cos(phi)+Cd.*sin(phi))./(sin(phi).^2);
-
-            % New induction factors
-            for k = 1:length(Blade.Radius)
-                if CT(k) < 0.96
-                    anew(k) = 1/(1+4*F(k)*sin(phi(k))^2/(sigmar(k)*Cl(k)*cos(phi(k))));
-                else
-                    anew(k) = (1/F(k))*(0.143+sqrt(0.0203-0.6427*(0.889-CT(k))));
-                end
-            end
-            a_new = 1./(4*F.*cos(phi)./(sigmar.*Cl)-1);
-
-            if max(abs(anew - a)) < 0.01 && max(abs(a_new - a_)) < 0.002
-
-                % Power coefficient
-                dCP = (8*(lambdar-[0; lambdar(1:end-1)])./TSR(u)^2).*F.*sin(phi).^2.*(cos(phi)-lambdar.*sin(phi)).*(sin(phi)+lambdar.*cos(phi)).*(1-(Cd./Cl).*(cot(phi))).*lambdar.^2;
-                CP(i) = real(sum(dCP(~isnan(dCP))));
-
-                break
-            elseif iter == 100
-                warning('Tolerance not met during iterations')
-            end
-
-        end
-
-        Pi(i) = 0.5 * 1.225 * pi*Blade.Radius(end)^2 * CP(i) * Drivetrain.Gearbox.Efficiency * Drivetrain.Generator.Efficiency * WindSpeeds(u)^3;
-        
-        if Pi(i) < Prated
-            break
-        end
-
-    end
-    
-    Pitch = Pitch(~isnan(Pi));
-    CP = CP(~isnan(Pi));
-    Pi = Pi(~isnan(Pi));
-    if length(Pitch) > 1
-        PitchAngle(u) = interp1(Pi,Pitch,Prated);
-        CP_U(u) = interp1(Pi,CP,Prated);
-    else
-        PitchAngle(u) = PitchAngle(u-1) + (PitchAngle(u-1)-PitchAngle(u-2));
-        CP_U(u) = CP_U(u-1) + (CP_U(u-1)-CP_U(u-2));
-    end
-    
-    end
-    
-end
+% Steady state curves
+disp('Determining steady state rotational speeds and pitch angles...')
+[~, ~, OmegaU, PitchAngle] = SteadyState(Blade, Airfoil, Drivetrain, Control, WindSpeeds);
+RPM = OmegaU * 60/(2*pi);
 
 % Avoid some common errors with linearization
 % (1) Set the gearbox efficiency (to avoid error that ADAMS cannot handle
-% nonideal gearboxes)
+% nonideal gearboxes) and remember the true efficiency to reset later
+TrueGearboxEfficiency = Drivetrain.Gearbox.Efficiency;
 Drivetrain.Gearbox.Efficiency = 1;
 
+%{
 % (2) Scale the HSS inertia from the reference machine (to avoid issues
 % with reaching very high rotor speeds during the linearization of some
 % direct-drive machines). Assuming that P ~ Mass, Radius² ~ P^(2/3), we get
 % a relation in the shape of I/Iref = (P/Pref)^(5/3) * (RPM_ref/RPM)^2.
+Prated = Control.Torque.SpeedC*(2*pi/60) *  Control.Torque.Demanded * Drivetrain.Generator.Efficiency;
 Drivetrain.Generator.HSSInertia = 534.116 * (Prated/(5e6))^(5/3) * (12.1*97/Control.Torque.SpeedC)^2;
+%}
 
 % Turbine input file
 disp('Writing input files...')
@@ -459,12 +299,18 @@ for j = 1:length(WindSpeeds)
     Lin.RSpeed(j) = data.y_op{38}*pi/30;
 end
 
+% Reset the gearbox efficiency
+Drivetrain.Gearbox.Efficiency = TrueGearboxEfficiency;
+
 save(handles.LinModel, 'sysm', 'Lin');
 disp(' ')
 disp(' ')
 disp('... Linearization complete!')
 
-set(hObject, 'Enable', 'on');
+% Enable window
+for j = 1:length(buttons)
+    set(buttons(j), 'Enable', 'on');
+end
 
 end
 
