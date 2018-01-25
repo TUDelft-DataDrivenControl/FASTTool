@@ -479,3 +479,38 @@ function ForeAft_MaxPitchAmplitude_textbox_CreateFcn(hObject, eventdata, handles
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+%% Plot the (partial load) torque control curve
+function plotbutton_Callback(hObject, eventdata, handles)
+    % Prepare vectors for plotting
+    OmegaA = handles.Control.Torque.SpeedA;
+    OmegaB = handles.Control.Torque.SpeedB;
+    OmegaB2 = handles.Control.Torque.SpeedB2;
+    OmegaC = handles.Control.Torque.SpeedC;
+    OmegaRegion2 = [OmegaB + 0:((OmegaB2-OmegaB)/50):OmegaB2, OmegaB2];
+    TorqueRegion2 = handles.Control.Torque.OptGain * (2*pi*OmegaRegion2/60).^2;
+    TorqueA = 0;
+    TorqueC = handles.Control.Torque.Demanded;
+    Omega = [OmegaA, OmegaRegion2, OmegaC];
+    Torque = [TorqueA, TorqueRegion2, TorqueC];
+    OmegaIdeal = [0:(max(Omega)/50):1.1*max(Omega), 1.1*max(Omega)];
+    TorqueIdeal = handles.Control.Torque.OptGain * (2*pi*OmegaIdeal/60).^2;
+
+    % Plot
+    Plot = figure();
+    set(Plot, 'Name', 'Control curve')
+    plot(OmegaIdeal,TorqueIdeal,'--')
+    xlim([0 max(OmegaIdeal)])
+    ylim('auto')
+    set(gca, ...
+        'XMinorTick', 'on', ...
+        'YMinorTick', 'on', ...
+        'Box', 'on', ...
+        'Layer', 'top', ...
+        'Fontsize', 8);
+    xlabel('HSS rotational speed [rad/s]')
+    ylabel('HSS torque [Nm]')
+    hold on
+    plot(Omega,Torque)
+    hold off
+    pause(0.1)
