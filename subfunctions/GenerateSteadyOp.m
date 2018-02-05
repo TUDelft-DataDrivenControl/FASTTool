@@ -127,9 +127,11 @@ if ~isempty(Pitchi)
     CPij = zeros(length(Pitchi), length(TSRj));
     CTij = zeros(length(Pitchi), length(TSRj));
     CQij = zeros(length(Pitchi), length(TSRj));
-
+    lgd_label = cell(1, length(Pitchi));
+    
     for i = 1:length(Pitchi)
         disp(['Pitch angle = ', num2str(Pitchi(i))])
+        lgd_label{i} = [num2str(Pitchi(i), '%.4f'), ' deg'];
         for j = 11:length(TSRj) % Tip speed ratios below 1 omitted to avoid problems in the performance calculations
 
             if (TSRj(j) - ceil(TSRj(j))) == 0
@@ -167,6 +169,8 @@ if ~isempty(Pitchi)
         plot(TSRj,CPij(i,:))
     end
     hold off
+    grid on
+    legend(lgd_label)
     pause(0.1)
     
     % Send data to Matlab workspace
