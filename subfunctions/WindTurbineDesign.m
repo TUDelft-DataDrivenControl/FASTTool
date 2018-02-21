@@ -92,8 +92,14 @@ button = questdlg('Save changes?');
 if strcmp(button, 'Yes')
     handles.Save = true;
     SaveProject_Callback(hObject, eventdata, handles);
+    EndGUI(handles)
+elseif strcmp(button, 'No')
+    handles.Save = false;
+    EndGUI(handles)
 end
 
+%% End GUI function
+function EndGUI(handles)
 if ~get(handles.Animate,'Value')
 	close all force
 else
@@ -124,6 +130,10 @@ function OpenProject_Callback(hObject, eventdata, handles)
 % Dialogue box
 [FileName,PathName] = uigetfile('*.mat', 'Open turbine');
 if FileName
+
+    % Set window title
+    Title = ['Wind turbine design ', FileName];
+    set(handles.WindTurbineDesign, 'Name', Title)
     
     % Load project
     load([PathName,FileName]);
