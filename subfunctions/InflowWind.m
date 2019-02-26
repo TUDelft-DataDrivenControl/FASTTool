@@ -25,7 +25,7 @@ else
     PLexp = 0.2;
 end
 
-fid = fopen([pwd, '\subfunctions\inputfiles\InflowWind.dat'], 'wt');
+fid = fopen([pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'InflowWind.dat'], 'wt');
 fprintf(fid, '------- InflowWind v3.01.* INPUT FILE -------------------------------------------------------------------------\n');
 fprintf(fid, '12 m/s turbulent winds on 31x31 FF grid and tower for FAST CertTests #18, #19, #21, #22, #23, and #24\n');
 fprintf(fid, '---------------------------------------------------------------------------------------------------------------\n');
@@ -89,7 +89,7 @@ if Wind.Type == 2
     % Wind profile
     t = -Wind.Ly/U/2:Wind.dt:(Wind.T + Wind.Ly/U/2);
     if rem(length(t),2) ~= 0
-        t = [t, t+Wind.dt];
+        t = [t, max(t)+Wind.dt];
     end
     x = U*t;
     y = linspace(Wind.Ly/2,-Wind.Ly/2,Wind.Ny);
@@ -102,10 +102,10 @@ if Wind.Type == 2
     w = zeros(size(u));
     
     % Save .wnd file
-    writebladed('subfunctions\inputfiles\wind',(u-U)/U,v/U,w/U,x,y,z,U);
+    writebladed([pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'wind'],(u-U)/U,v/U,w/U,x,y,z,U);
     
     % Save .sum file
-    fid = fopen('subfunctions\inputfiles\wind.sum', 'wt');
+    fid = fopen([pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'wind.sum'], 'wt');
     fprintf(fid, 'T\tCLOCKWISE\n');
     fprintf(fid, '%0.0f\tHUB HEIGHT\n\n', H);
     fprintf(fid, '%0.3f\tUBAR\n', U);

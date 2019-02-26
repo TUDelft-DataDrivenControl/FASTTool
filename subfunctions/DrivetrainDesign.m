@@ -23,13 +23,13 @@ function DrivetrainDesign_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.Drivetrain = varargin{1};
 handles.Input = varargin;
 
-% Set background imagfe
+% Set background image
 handles.Background = axes('Units', 'Normalized', 'position', [0 0 1 1]);
 uistack(handles.Background, 'bottom');
 if handles.Drivetrain.Gearbox.Ratio == 1
-    img = imread('graphics\drivetrain_directdrive.png');
+    img = imread(['graphics' filesep 'drivetrain_directdrive.png']);
 else
-    img = imread('graphics\drivetrain_geared.png');
+    img = imread(['graphics' filesep 'drivetrain_geared.png']);
 end
 imagesc(img);
 set(handles.Background, 'Visible', 'off')
@@ -138,9 +138,9 @@ handles.Drivetrain.Gearbox.Ratio = str2double(get(hObject,'String'));
 % Update background image
 axes(handles.Background);
 if handles.Drivetrain.Gearbox.Ratio == 1
-    img = imread('graphics\drivetrain_directdrive.png');
+    img = imread(['graphics' filesep 'drivetrain_directdrive.png']);
 else
-    img = imread('graphics\drivetrain_geared.png');
+    img = imread(['graphics' filesep 'drivetrain_geared.png']);
 end
 imagesc(img);
 set(handles.Background, 'Visible', 'off')

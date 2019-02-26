@@ -188,7 +188,7 @@ xlabel('Operating range [rpm]')
 ylabel('Mode frequency [Hz]')
 
 % Axis limits
-RPM1 = handles.Control.Torque.SpeedB/handles.Drivetrain.Gearbox.Ratio;
+RPM1 = handles.Control.Torque.SpeedA/handles.Drivetrain.Gearbox.Ratio;
 RPM2 = handles.Control.Torque.SpeedC/handles.Drivetrain.Gearbox.Ratio;
 RPMlim = handles.RPMs(end);
 Flim = [];

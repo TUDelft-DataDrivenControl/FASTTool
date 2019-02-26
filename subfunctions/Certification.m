@@ -23,7 +23,7 @@ function Certification_OpeningFcn(hObject, eventdata, handles, varargin)
 % Set background image
 h = axes('Units', 'Normalized', 'position', [0 0 1 1]);
 uistack(h, 'bottom');
-img = imread('graphics\certification.png');
+img = imread(['graphics' filesep 'certification.png']);
 imagesc(img);
 set(h, 'HandleVisibility', 'off', 'visible','off')
 
@@ -35,10 +35,10 @@ handles.Nacelle = varargin{4};
 handles.Drivetrain = varargin{5};
 handles.Control = varargin{6};
 handles.CertificationSettings = varargin{7};
-handles.LinModel = varargin{8};
 
 % Update input fields
 set(handles.Runtime_textbox, 'String', num2str(handles.CertificationSettings.Run.Time));
+handles.CertificationSettings.Wind.T = handles.CertificationSettings.Run.Time;
 U = num2str(handles.CertificationSettings.Run.WindSpeed(1));
 if length(handles.CertificationSettings.Run.WindSpeed) > 1
     for i = 2:length(handles.CertificationSettings.Run.WindSpeed)
@@ -48,65 +48,65 @@ end
 set(handles.WindSpeed_textbox, 'String', U);
 set(handles.NSeeds_textbox, 'String', num2str(handles.CertificationSettings.Run.Seeds));
 handles.OutputFile = {};
-set(handles.OutputFiles_text, 'String', '../<empty>')
+set(handles.OutputFiles_text, 'String', '<empty>')
 
 % Update wind icons
 if handles.CertificationSettings.Wind.Type == 1       % Steady wind
-    set(handles.WindSettings, 'CData', imread('icons\wind_steady.png'))
+    set(handles.WindSettings, 'CData', imread(['icons' filesep 'wind_steady.png']))
     set(handles.WindSettings, 'TooltipString', 'Steady wind')
 elseif handles.CertificationSettings.Wind.Type == 2   % Stepped wind
-    set(handles.WindSettings, 'CData', imread('icons\wind_step.png'))
+    set(handles.WindSettings, 'CData', imread(['icons' filesep 'wind_step.png']))
     set(handles.WindSettings, 'TooltipString', 'Stepped wind')
 elseif handles.CertificationSettings.Wind.Type == 3   % Normal wind profile (NWP)
-    set(handles.WindSettings, 'CData', imread('icons\wind_nwp.png'))
+    set(handles.WindSettings, 'CData', imread(['icons' filesep 'wind_nwp.png']))
     set(handles.WindSettings, 'TooltipString', 'Normal wind profile (NWP)')
 elseif handles.CertificationSettings.Wind.Type == 4   % Normal turbulence model (NTM)
-    set(handles.WindSettings, 'CData', imread('icons\wind_ntm.png'))
+    set(handles.WindSettings, 'CData', imread(['icons' filesep 'wind_ntm.png']))
     set(handles.WindSettings, 'TooltipString', 'Normal turbulence model (NTM)')
 elseif handles.CertificationSettings.Wind.Type == 5   % Annual extreme wind speed (EWM)
-    set(handles.WindSettings, 'CData', imread('icons\wind_ewm1.png'))
+    set(handles.WindSettings, 'CData', imread(['icons' filesep 'wind_ewm1.png']))
     set(handles.WindSettings, 'TooltipString', 'Annual extreme wind speed (EWM)')
 elseif handles.CertificationSettings.Wind.Type == 6   % 50-year extreme wind speed (EWM)
-    set(handles.WindSettings, 'CData', imread('icons\wind_ewm50.png'))
+    set(handles.WindSettings, 'CData', imread(['icons' filesep 'wind_ewm50.png']))
     set(handles.WindSettings, 'TooltipString', '50-year extreme wind speed (EWM)')
 elseif handles.CertificationSettings.Wind.Type == 7   % Extreme wind shear (EWS)
-    set(handles.WindSettings, 'CData', imread('icons\wind_ews.png'))
+    set(handles.WindSettings, 'CData', imread(['icons' filesep 'wind_ews.png']))
     set(handles.WindSettings, 'TooltipString', 'Extreme wind shear (EWS)')
 elseif handles.CertificationSettings.Wind.Type == 8   % Extreme turbulence model (ETM)
-    set(handles.WindSettings, 'CData', imread('icons\wind_etm.png'))
+    set(handles.WindSettings, 'CData', imread(['icons' filesep 'wind_etm.png']))
     set(handles.WindSettings, 'TooltipString', 'Extreme turbulence model (ETM)')
 elseif handles.CertificationSettings.Wind.Type == 9   % Extreme operating gust (EOG)
-    set(handles.WindSettings, 'CData', imread('icons\wind_eog.png'))
+    set(handles.WindSettings, 'CData', imread(['icons' filesep 'wind_eog.png']))
     set(handles.WindSettings, 'TooltipString', 'Extreme operating gust (EOG)')
 elseif handles.CertificationSettings.Wind.Type == 10   % Extreme direction change (EDC)
-    set(handles.WindSettings, 'CData', imread('icons\wind_edc.png'))
+    set(handles.WindSettings, 'CData', imread(['icons' filesep 'wind_edc.png']))
     set(handles.WindSettings, 'TooltipString', 'Extreme direction change (EDC)')
 elseif handles.CertificationSettings.Wind.Type == 11   % Extreme coherent gust (ECD)
-    set(handles.WindSettings, 'CData', imread('icons\wind_ecg.png'))
+    set(handles.WindSettings, 'CData', imread(['icons' filesep 'wind_ecg.png']))
     set(handles.WindSettings, 'TooltipString', 'Extreme coherent gust (ECD)')
 end
 
 % Update operations icons
 if handles.CertificationSettings.Mode.Type == 1       % Power production
-    set(handles.OperationSettings, 'CData', imread('icons\operation_prod.png'))
+    set(handles.OperationSettings, 'CData', imread(['icons' filesep 'operation_prod.png']))
     set(handles.OperationSettings, 'TooltipString', 'Power production')
 elseif handles.CertificationSettings.Mode.Type == 2   % Power production with fault
-    set(handles.OperationSettings, 'CData', imread('icons\operation_prodfault.png'))
+    set(handles.OperationSettings, 'CData', imread(['icons' filesep 'operation_prodfault.png']))
     set(handles.OperationSettings, 'TooltipString', 'Power production with fault')
 elseif handles.CertificationSettings.Mode.Type == 3   % Startup
-    set(handles.OperationSettings, 'CData', imread('icons\operation_start.png'))
+    set(handles.OperationSettings, 'CData', imread(['icons' filesep 'operation_start.png']))
     set(handles.OperationSettings, 'TooltipString', 'Startup')
 elseif handles.CertificationSettings.Mode.Type == 4   % Normal shutdown
-    set(handles.OperationSettings, 'CData', imread('icons\operation_shutdown.png'))
+    set(handles.OperationSettings, 'CData', imread(['icons' filesep 'operation_shutdown.png']))
     set(handles.OperationSettings, 'TooltipString', 'Normal shutdown')
 elseif handles.CertificationSettings.Mode.Type == 5   % Emergency shutdown
-    set(handles.OperationSettings, 'CData', imread('icons\operation_emergency.png'))
+    set(handles.OperationSettings, 'CData', imread(['icons' filesep 'operation_emergency.png']))
     set(handles.OperationSettings, 'TooltipString', 'Emergency shutdown')
 elseif handles.CertificationSettings.Mode.Type == 6   % Idling
-    set(handles.OperationSettings, 'CData', imread('icons\operation_idle.png'))
+    set(handles.OperationSettings, 'CData', imread(['icons' filesep 'operation_idle.png']))
     set(handles.OperationSettings, 'TooltipString', 'Idling')
 elseif handles.CertificationSettings.Mode.Type == 7   % Parked
-    set(handles.OperationSettings, 'CData', imread('icons\operation_idle.png'))
+    set(handles.OperationSettings, 'CData', imread(['icons' filesep 'operation_idle.png']))
     set(handles.OperationSettings, 'TooltipString', 'Parked')
 end
 
@@ -133,7 +133,7 @@ function Certification_CloseRequestFcn(hObject, eventdata, handles)
 uiresume(hObject);
 
 %% OK button
-function OK_Callback(hObject, eventdata, handles)
+function Close_Callback(hObject, eventdata, handles)
 uiresume(handles.Certification);
 
 %% WindSettings settings
@@ -157,51 +157,43 @@ for i = 1:length(buttons)
 end
 
 % Disable start button
-if ~exist(handles.LinModel, 'file')
-    set(handles.Start, 'Enable', 'off')
-else
-    contents = whos('-file', handles.LinModel);
-    if ~ismember('Lin', {contents.name}) || ~ismember('sysm', {contents.name})
-        set(handles.Start, 'Enable', 'off')
-    end
-end
 if isempty(handles.OutputFile)
     set(handles.Start, 'Enable', 'off')
 end
 
 % Update icon
 if handles.CertificationSettings.Wind.Type == 1       % Steady wind
-    set(hObject, 'CData', imread('icons\wind_steady.png'))
+    set(hObject, 'CData', imread(['icons' filesep 'wind_steady.png']))
     set(hObject, 'TooltipString', 'Steady wind')
 elseif handles.CertificationSettings.Wind.Type == 2   % Stepped wind
-    set(hObject, 'CData', imread('icons\wind_step.png'))
+    set(hObject, 'CData', imread(['icons' filesep 'wind_step.png']))
     set(hObject, 'TooltipString', 'Stepped wind')
 elseif handles.CertificationSettings.Wind.Type == 3   % Normal wind profile (NWP)
-    set(hObject, 'CData', imread('icons\wind_nwp.png'))
+    set(hObject, 'CData', imread(['icons' filesep 'wind_nwp.png']))
     set(hObject, 'TooltipString', 'Normal wind profile (NWP)')
 elseif handles.CertificationSettings.Wind.Type == 4   % Normal turbulence model (NTM)
-    set(hObject, 'CData', imread('icons\wind_ntm.png'))
+    set(hObject, 'CData', imread(['icons' filesep 'wind_ntm.png']))
     set(hObject, 'TooltipString', 'Normal turbulence model (NTM)')
 elseif handles.CertificationSettings.Wind.Type == 5   % Annual extreme wind speed (EWM)
-    set(hObject, 'CData', imread('icons\wind_ewm1.png'))
+    set(hObject, 'CData', imread(['icons' filesep 'wind_ewm1.png']))
     set(hObject, 'TooltipString', 'Annual extreme wind speed (EWM)')
 elseif handles.CertificationSettings.Wind.Type == 6   % 50-year extreme wind speed (EWM)
-    set(hObject, 'CData', imread('icons\wind_ewm50.png'))
+    set(hObject, 'CData', imread(['icons' filesep 'wind_ewm50.png']))
     set(hObject, 'TooltipString', '50-year extreme wind speed (EWM)')
 elseif handles.CertificationSettings.Wind.Type == 7   % Extreme wind shear (EWS)
-    set(hObject, 'CData', imread('icons\wind_ews.png'))
+    set(hObject, 'CData', imread(['icons' filesep 'wind_ews.png']))
     set(hObject, 'TooltipString', 'Extreme wind shear (EWS)')
 elseif handles.CertificationSettings.Wind.Type == 8   % Extreme turbulence model (ETM)
-    set(hObject, 'CData', imread('icons\wind_etm.png'))
+    set(hObject, 'CData', imread(['icons' filesep 'wind_etm.png']))
     set(hObject, 'TooltipString', 'Extreme turbulence model (ETM)')
 elseif handles.CertificationSettings.Wind.Type == 9   % Extreme operating gust (EOG)
-    set(hObject, 'CData', imread('icons\wind_eog.png'))
+    set(hObject, 'CData', imread(['icons' filesep 'wind_eog.png']))
     set(hObject, 'TooltipString', 'Extreme operating gust (EOG)')
 elseif handles.CertificationSettings.Wind.Type == 10   % Extreme direction change (EDC)
-    set(hObject, 'CData', imread('icons\wind_edc.png'))
+    set(hObject, 'CData', imread(['icons' filesep 'wind_edc.png']))
     set(hObject, 'TooltipString', 'Extreme direction change (EDC)')
 elseif handles.CertificationSettings.Wind.Type == 11   % Extreme coherent gust (ECD)
-    set(hObject, 'CData', imread('icons\wind_ecg.png'))
+    set(hObject, 'CData', imread(['icons' filesep 'wind_ecg.png']))
     set(hObject, 'TooltipString', 'Extreme coherent gust (ECD)')
 end
 
@@ -227,39 +219,31 @@ for i = 1:length(buttons)
 end
 
 % Disable start button
-if ~exist(handles.LinModel, 'file')
-    set(handles.Start, 'Enable', 'off')
-else
-    contents = whos('-file', handles.LinModel);
-    if ~ismember('Lin', {contents.name}) || ~ismember('sysm', {contents.name})
-        set(handles.Start, 'Enable', 'off')
-    end
-end
 if isempty(handles.OutputFile)
     set(handles.Start, 'Enable', 'off')
 end
 
 % Update icon
 if handles.CertificationSettings.Mode.Type == 1       % Power production
-    set(hObject, 'CData', imread('icons\operation_prod.png'))
+    set(hObject, 'CData', imread(['icons' filesep 'operation_prod.png']))
     set(hObject, 'TooltipString', 'Power production')
 elseif handles.CertificationSettings.Mode.Type == 2   % Power production with fault
-    set(hObject, 'CData', imread('icons\operation_prodfault.png'))
+    set(hObject, 'CData', imread(['icons' filesep 'operation_prodfault.png']))
     set(hObject, 'TooltipString', 'Power production with fault')
 elseif handles.CertificationSettings.Mode.Type == 3   % Startup
-    set(hObject, 'CData', imread('icons\operation_start.png'))
+    set(hObject, 'CData', imread(['icons' filesep 'operation_start.png']))
     set(hObject, 'TooltipString', 'Startup')
 elseif handles.CertificationSettings.Mode.Type == 4   % Normal shutdown
-    set(hObject, 'CData', imread('icons\operation_shutdown.png'))
+    set(hObject, 'CData', imread(['icons' filesep 'operation_shutdown.png']))
     set(hObject, 'TooltipString', 'Normal shutdown')
 elseif handles.CertificationSettings.Mode.Type == 5   % Emergency shutdown
-    set(hObject, 'CData', imread('icons\operation_emergency.png'))
+    set(hObject, 'CData', imread(['icons' filesep 'operation_emergency.png']))
     set(hObject, 'TooltipString', 'Emergency shutdown')
 elseif handles.CertificationSettings.Mode.Type == 6   % Idling
-    set(hObject, 'CData', imread('icons\operation_idle.png'))
+    set(hObject, 'CData', imread(['icons' filesep 'operation_idle.png']))
     set(hObject, 'TooltipString', 'Idling')
 elseif handles.CertificationSettings.Mode.Type == 7   % Parked
-    set(hObject, 'CData', imread('icons\operation_idle.png'))
+    set(hObject, 'CData', imread(['icons' filesep 'operation_idle.png']))
     set(hObject, 'TooltipString', 'Parked')
 end
 
@@ -277,17 +261,39 @@ open_system('FAST/Scope')
 
 %% Wind speed range - text box
 function WindSpeed_textbox_Callback(hObject, eventdata, handles)
-eval(['U = [', get(hObject, 'String'), '];']);
-if min(U) < 0
-    set(hObject, 'String', '0')
-elseif sum(isnan(U)) > 0
-    set(hObject, 'String', num2str(handles.CertificationSettings.Run.WindSpeed))
-elseif isempty(isnan(U))
-    set(hObject, 'String', num2str(handles.CertificationSettings.Run.WindSpeed))
+try
+    eval(['U = [', get(hObject, 'String'), '];']);
+    if sum(isnan(U)) > 0 || isempty(isnan(U))
+        U = num2str(handles.CertificationSettings.Run.WindSpeed(1));
+        if length(handles.CertificationSettings.Run.WindSpeed) > 1
+            for i = 2:length(handles.CertificationSettings.Run.WindSpeed)
+                U = [U, ', ', num2str(handles.CertificationSettings.Run.WindSpeed(i))];
+            end
+        end
+        set(handles.WindSpeed_textbox, 'String', U);
+    end
+catch
+    U = num2str(handles.CertificationSettings.Run.WindSpeed(1));
+    if length(handles.CertificationSettings.Run.WindSpeed) > 1
+        for i = 2:length(handles.CertificationSettings.Run.WindSpeed)
+            U = [U, ', ', num2str(handles.CertificationSettings.Run.WindSpeed(i))];
+        end
+    end
+    set(handles.WindSpeed_textbox, 'String', U);
 end
-handles.CertificationSettings.Run.WindSpeed = U;
+
+eval(['U = [', get(hObject, 'String'), '];']);
+handles.CertificationSettings.Run.WindSpeed = sort(U);
+U = num2str(handles.CertificationSettings.Run.WindSpeed(1));
+if length(handles.CertificationSettings.Run.WindSpeed) > 1
+    for i = 2:length(handles.CertificationSettings.Run.WindSpeed)
+        U = [U, ', ', num2str(handles.CertificationSettings.Run.WindSpeed(i))];
+    end
+end
+set(handles.WindSpeed_textbox, 'String', U);
 guidata(hObject, handles);
 UpdateOutputName(handles);
+
 function WindSpeed_textbox_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
@@ -316,6 +322,7 @@ elseif isnan(str2double(get(hObject,'String')))
     set(hObject, 'String', num2str(handles.CertificationSettings.Run.Time))
 end
 handles.CertificationSettings.Run.Time = str2double(get(hObject,'String'));
+handles.CertificationSettings.Wind.T = handles.CertificationSettings.Run.Time;
 guidata(hObject, handles);
 function Runtime_textbox_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
@@ -334,16 +341,9 @@ if FileName
     % Update output file names
     UpdateOutputName(handles);
     
-    % Enable start button if linearized model is available
-    if handles.LinModel
-        if exist(handles.LinModel, 'file') == 2
-            contents = whos('-file', handles.LinModel);
-            if ismember('Lin', {contents.name}) && ismember('sysm', {contents.name})
-                set(handles.Start, 'Enable', 'on')
-            end
-        end
-    end
-    
+    % Enable start button
+    set(handles.Start, 'Enable', 'on')
+
 end
 
 %% Update output file names
@@ -412,9 +412,16 @@ end
 %% Start simulation
 function Start_Callback(hObject, eventdata, handles)
 
+% Disable window - except for 'scope'
+buttons = findall(handles.Certification, 'Type', 'UIControl');
+for i = 1:length(buttons)
+    set(buttons(i), 'Enable', 'off');
+end
+set(handles.Output, 'Enable', 'on');
+
 % Set output filename
 if isempty(handles.OutputFile)
-    handles.OutputFile = [pwd, '\output'];
+    handles.OutputFile = [pwd, filesep 'output'];
 end
 
 % Temporarily turn off warnings
@@ -428,7 +435,6 @@ Nacelle = handles.Nacelle;
 Drivetrain = handles.Drivetrain;
 Control = handles.Control;
 CertificationSettings = handles.CertificationSettings;
-U = CertificationSettings.Run.WindSpeed;
 TMax = CertificationSettings.Run.Time;
 T = CertificationSettings.Wind.T;
 Ly = CertificationSettings.Wind.Ly;
@@ -466,8 +472,16 @@ Blade.Flap2_coeff = y12_coeff;
 Blade.Edge1_coeff = y21_coeff;
 Blade.Edge2_coeff = y22_coeff;
 
-% Load linearized model
-load(handles.LinModel)
+% Steady state curves
+disp('Determining steady state rotational speeds and pitch angles...')
+if CertificationSettings.Wind.Type == 2
+    [~, ~, OmegaU, PitchAngle] = SteadyState(Blade, Airfoil, Drivetrain, Control, CertificationSettings.Wind.Step);
+    OmegaU = OmegaU*ones(length(CertificationSettings.Run.WindSpeed));
+    PitchAngle = PitchAngle*ones(length(CertificationSettings.Run.WindSpeed));
+else
+    [~, ~, OmegaU, PitchAngle] = SteadyState(Blade, Airfoil, Drivetrain, Control, CertificationSettings.Run.WindSpeed);
+end
+RPM = OmegaU * 60/(2*pi);
 
 % Initialize controller
 disp('Setting controller parameters...')
@@ -481,13 +495,13 @@ FASTinput(Control.DT, TMax);
 AeroDyn(Blade,Airfoil,Tower,CertificationSettings.Mode.Type);
 
 % Send to base workspace and make structures available for Simulink and run the simulation
-assignin('base', 'FAST_InputFileName', [pwd, '\subfunctions\inputfiles\FAST.fst']);
+assignin('base', 'FAST_InputFileName', [pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'FAST.fst']);
 assignin('base', 'TMax', TMax);
-assignin('base', 'Lin', Lin);
 disp('')
 
 % Loop over wind speeds and seeds
-for U = CertificationSettings.Run.WindSpeed
+for j = 1:length(CertificationSettings.Run.WindSpeed)
+    U = CertificationSettings.Run.WindSpeed(j);
     for seed = 1:CertificationSettings.Run.Seeds
 
         % Output file name
@@ -511,8 +525,8 @@ for U = CertificationSettings.Run.WindSpeed
             RPM_Init = 0;
             P_InitAngle = Control.Pitch.Max;
         else
-            RPM_Init = (30/pi) * interp1(Lin.V,Lin.RSpeed,Ui,'pchip');
-            P_InitAngle = 180/pi * interp1(Lin.V,Lin.Pitch,Ui,'pchip');
+            RPM_Init = RPM(j);
+            P_InitAngle = PitchAngle(j);
         end
         
         if CertificationSettings.Mode.Type == 3     % Startup
@@ -541,7 +555,7 @@ for U = CertificationSettings.Run.WindSpeed
         InflowWind(CertificationSettings.Wind,U,Tower.HubHeight,Blade.Radius(end))
 
         % Preload the OutList
-        load([pwd '\subfunctions\OutList.mat'])
+        load([pwd, filesep 'subfunctions' filesep 'OutList.mat'])
         assignin('base', 'OutList', OutList);
         assignin('base', 'CertificationSettings', CertificationSettings);
 
@@ -550,7 +564,7 @@ for U = CertificationSettings.Run.WindSpeed
         evalc('sim(''FAST'',TMax);');
 
         % Extract output
-        filename = [pwd '\subfunctions\inputfiles\FAST.SFunc.out'];
+        filename = [pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'FAST.SFunc.out'];
         delimiter = '\t';
         startRow = 6;
         formatSpec = '%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%[^\n\r]';
@@ -567,6 +581,11 @@ for U = CertificationSettings.Run.WindSpeed
         end
 
     end
+end
+
+% Enable window
+for i = 1:length(buttons)
+    set(buttons(i), 'Enable', 'on');
 end
 
 % Turn on warnings

@@ -26,34 +26,10 @@ handles.Tower = varargin{3};
 handles.Nacelle = varargin{4};
 handles.Control = varargin{5};
 handles.Drivetrain = varargin{6};
-handles.LinModel = varargin{7};
-handles.Input = varargin{7};
-
-% Check if current linearized model is valid
-if handles.LinModel
-    if exist(handles.LinModel, 'file') == 2
-
-        contents = whos('-file', handles.LinModel);
-        if ismember('Lin', {contents.name}) && ismember('sysm', {contents.name})
-            set(handles.FileCheck, 'String', 'Valid model found.')
-        else
-            set(handles.FileCheck, 'String', 'Invalid model.')
-        end
-
-    else
-
-        set(handles.FileCheck, 'String', '<empty>')
-
-    end
-else
-       
-    set(handles.FileCheck, 'String', '<empty>')
-    
-end
 
 % Propose values for the wind speed range
-set(handles.WindSpeed_From, 'String', '5')
-set(handles.WindSpeed_To, 'String', '25')
+set(handles.WindSpeed_From, 'String', int2str(ceil(handles.Control.WindSpeed.Cutin)))
+set(handles.WindSpeed_To, 'String', int2str(floor(handles.Control.WindSpeed.Cutout)))
 set(handles.WindSpeed_Step, 'String', '1')
 set(handles.LinAmount, 'String', '1')
 set(handles.LinRotations, 'String', '1')
@@ -66,40 +42,18 @@ uiwait(handles.Linearization);
 
 %% Closing function
 function Linearization_CloseRequestFcn(hObject, eventdata, handles)
-button = questdlg('Save changes?');
-if strcmp(button, 'Yes')
-    handles.Save = true;
-    guidata(hObject, handles);
-    uiresume(hObject);
-elseif strcmp(button, 'No')
-    handles.Save = false;
-    guidata(hObject, handles);
-    uiresume(hObject);
-end
 
-%% Apply button
-function Apply_Callback(hObject, eventdata, handles)
-handles.Save = true;
-guidata(hObject, handles);
-uiresume(handles.Linearization);
+uiresume(hObject);
 
-%% Cancel button
-function Cancel_Callback(hObject, eventdata, handles)
-handles.Save = false;
-guidata(hObject, handles);
+%% Close button
+function Close_Callback(hObject, eventdata, handles)
+
 uiresume(handles.Linearization);
 
 %% Output function
 function varargout = Linearization_OutputFcn(hObject, eventdata, handles) 
 
-% Set output
-if handles.Save
-    varargout{1} = handles.LinModel;
-else
-    varargout{1} = handles.Input;
-end
-
-% Apply figure
+% Close figure
 delete(hObject)
 
 %% Set file names
@@ -110,50 +64,27 @@ function SetLinModel_Callback(hObject, eventdata, handles)
 handles.LinModel = [PathName, FileName];
 
 if FileName
-
     % Enable buttons
     set(handles.Linearize, 'Enable', 'on');
-    
+
+    % Display file name
+    set(handles.FileName_text, 'String', FileName)
+
     % Store in handles
     guidata(hObject, handles);
-
 end
 
-%% Open existing model
-function OpenLinModel_Callback(hObject, eventdata, handles)
-
-% Get file name
-[FileName,PathName] = uigetfile('*.mat', 'Select existing linearized model');
-handles.LinModel = [PathName, FileName];
-
-% Check if it is a valid model
-if FileName
-    if exist(handles.LinModel, 'file') == 2
-
-        contents = whos('-file', handles.LinModel);
-        if ismember('Lin', {contents.name}) && ismember('sysm', {contents.name})
-            set(handles.FileCheck, 'String', 'Valid model found.')
-        else
-            set(handles.FileCheck, 'String', 'Invalid model.')
-        end
-    end
-else
-
-    set(handles.FileCheck, 'String', '<empty>')
-
-end
-
-% Update handles
-guidata(hObject, handles);
-    
 %% Linearization
 function Linearize_Callback(hObject, eventdata, handles)
 
 % Wind speed range
 WindSpeeds = str2double(get(handles.WindSpeed_From, 'String')):str2double(get(handles.WindSpeed_Step, 'String')):str2double(get(handles.WindSpeed_To, 'String'));
 if sum(WindSpeeds) == 0 || isnan(sum(WindSpeeds))
-    errordlg('Invalid wind speed range.', 'Error')
+    errordlg('Invalid wind speed range', 'Error')
+elseif min(WindSpeeds) < handles.Control.WindSpeed.Cutin || max(WindSpeeds) > handles.Control.WindSpeed.Cutout
+    errordlg('Wind speeds must be inside operational range', 'Error')
 else
+    
 % Disable window
 buttons = findall(handles.Linearization, 'Type', 'UIControl');
 for j = 1:length(buttons)
@@ -240,14 +171,14 @@ disp('Writing input files...')
 
 % Simulink settings
 TSim = 60;
-FAST_InputFileName = [pwd, '\subfunctions\inputfiles\FAST.fst'];
+FAST_InputFileName = [pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'FAST.fst'];
 
 % Turbine input files
 AeroDyn(Blade,Airfoil,Tower,'Linearize');
 ServoDyn(Drivetrain,Control,'Linearize');
 
 % Preload the OutList
-load([pwd '\subfunctions\OutList.mat'])
+load([pwd, filesep 'subfunctions' filesep 'OutList.mat'])
 assignin('base', 'OutList', OutList);
 
 % Run linearization
@@ -269,6 +200,7 @@ for j = 1:length(WindSpeeds)
 
     % Wind input file
     Wind.Type = 1;
+    Wind.T = TMax;
     InflowWind(Wind,WindSpeeds(j),Tower.HubHeight,Blade.Radius(end))
 
     % Run FAST and prevent console output
@@ -283,7 +215,7 @@ for j = 1:length(WindSpeeds)
     C = 0;
     D = 0;
     for i = 1:LinAmount
-        LinName = [pwd, '\subfunctions\inputfiles\FAST.SFunc.', int2str(i), '.lin'];
+        LinName = [pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'FAST.SFunc.', int2str(i), '.lin'];
         data = ReadFASTLinear(LinName);
         A = A + 1/LinAmount * data.A;
         B = B + 1/LinAmount * data.B;

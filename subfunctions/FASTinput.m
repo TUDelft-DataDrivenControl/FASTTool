@@ -17,7 +17,7 @@ end
 
 
 %% FAST input file
-fid = fopen([pwd, '\subfunctions\inputfiles\FAST.fst'], 'wt');
+fid = fopen([pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'FAST.fst'], 'wt');
 fprintf(fid, '------- FAST v8.16.* INPUT FILE ------------------------------------------------\n');
 fprintf(fid, 'Created %s.\n', datestr(now));
 fprintf(fid, '---------------------- SIMULATION CONTROL --------------------------------------\n');

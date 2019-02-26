@@ -22,7 +22,7 @@ function TowerDesign_OpeningFcn(hObject, eventdata, handles, varargin)
 % Set background image
 h = axes('Units', 'Normalized', 'position', [0 0 1 1]);
 uistack(h, 'bottom');
-img = imread('graphics\tower.png');
+img = imread(['graphics' filesep 'tower.png']);
 imagesc(img);
 set(h, 'HandleVisibility', 'off', 'visible','off')
 
@@ -35,13 +35,12 @@ handles.Input = varargin(1);
 % Update input fields
 set(handles.TableSize_textbox, 'String', length(handles.Tower.Height));
 set(handles.TableSize_slider, 'Value', length(handles.Tower.Height));
-set(handles.Tower_BottomThickness_textbox, 'String', num2str(handles.Tower.BottomThickness));
-set(handles.Tower_TopThickness_textbox, 'String', num2str(handles.Tower.TopThickness));
+set(handles.Tower_EffectiveDensity_textbox, 'String', num2str(handles.Tower.EffectiveDensity));
 set(handles.Hub_Height_textbox, 'String', num2str(handles.Tower.HubHeight));
 set(handles.Table, 'Data', ...
    [num2cell(handles.Tower.Height(:)), ...
     num2cell(handles.Tower.Diameter(:)), ...
-    num2cell(handles.Tower.ExtraMass(:))]);
+    num2cell(handles.Tower.WallThickness(:))]);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -95,24 +94,21 @@ if handles.Save
     % Extract geometry from table
     Tower.Height = [];
     Tower.Diameter = [];
-    Tower.ExtraMass = [];
+    Tower.WallThickness = [];
     for i = 1:size(Table,1)
         if sum(invalid(i,:)) == 0
             Tower.Height = [Tower.Height; Table{i,1}];
             Tower.Diameter = [Tower.Diameter; Table{i,2}];
-            Tower.ExtraMass = [Tower.ExtraMass; Table{i,3}];
+            Tower.WallThickness = [Tower.WallThickness; Table{i,3}];
         end
     end
-    Tower.BottomThickness = str2double(get(handles.Tower_BottomThickness_textbox, 'String'));
-    Tower.TopThickness = str2double(get(handles.Tower_TopThickness_textbox, 'String'));
     Tower.HubHeight = str2double(get(handles.Hub_Height_textbox, 'String'));
+    Tower.EffectiveDensity = str2double(get(handles.Tower_EffectiveDensity_textbox, 'String'));
     
     % Derived properties
     Tower.ShearModulus = 80.8e9;
     Tower.YoungsModulus = 210e9;
-    Tower.Density = 7850;
-    Tower.WallThickness = linspace(Tower.BottomThickness,Tower.TopThickness,length(Tower.Height))';
-    Tower.Mass = Tower.Density * pi* (Tower.Diameter.^2 - (Tower.Diameter-2*Tower.WallThickness).^2) ./ 4 + Tower.ExtraMass;
+    Tower.Mass = Tower.EffectiveDensity * pi* (Tower.Diameter.^2 - (Tower.Diameter-2*Tower.WallThickness).^2) ./ 4;
     Tower.EI = Tower.YoungsModulus * pi/64*(Tower.Diameter.^4 - (Tower.Diameter-2*Tower.WallThickness).^4);
     Tower.GJ = Tower.ShearModulus * pi/32*(Tower.Diameter.^4 - (Tower.Diameter-2*Tower.WallThickness).^4);
     Tower.EA = Tower.YoungsModulus * pi*Tower.Diameter.*Tower.WallThickness;
@@ -143,30 +139,16 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-%% Tower top wall thickness - text box
-function Tower_TopThickness_textbox_Callback(hObject, eventdata, handles)
+%% Tower effective density - text box
+function Tower_EffectiveDensity_textbox_Callback(hObject, eventdata, handles)
 if str2double(get(hObject,'String')) < 0
     set(hObject, 'String', '0')
 elseif isnan(str2double(get(hObject,'String')))
-    set(hObject, 'String', num2str(handles.Tower.TopThickness))
+    set(hObject, 'String', num2str(handles.Tower.EffectiveDensity))
 end
-handles.Tower.TopThickness = str2double(get(hObject,'String'));
+handles.Tower.EffectiveDensity = str2double(get(hObject,'String'));
 guidata(hObject, handles);
-function Tower_TopThickness_textbox_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-%% Tower bottom wall thickness - text box
-function Tower_BottomThickness_textbox_Callback(hObject, eventdata, handles)
-if str2double(get(hObject,'String')) < 0
-    set(hObject, 'String', '0')
-elseif isnan(str2double(get(hObject,'String')))
-    set(hObject, 'String', num2str(handles.Tower.BottomThickness))
-end
-handles.Tower.BottomThickness = str2double(get(hObject,'String'));
-guidata(hObject, handles);
-function Tower_BottomThickness_textbox_CreateFcn(hObject, eventdata, handles)
+function Tower_EffectiveDensity_textbox_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -300,10 +282,12 @@ for i = 1:size(Table,1)
     else
         Tower.Diameter(i) = Table{i,2};
     end
+    if isempty(Table{i,2})
+        Tower.WallThickness(i) = NaN;
+    else
+        Tower.WallThickness(i) = Table{i,3};
+    end
 end
-Tower.BottomThickness = str2double(get(handles.Tower_BottomThickness_textbox, 'String'));
-Tower.TopThickness = str2double(get(handles.Tower_TopThickness_textbox, 'String'));
-Tower_WallThickness = linspace(Tower.BottomThickness,Tower.TopThickness,length(Tower.Height));
 
 % Color scheme
 EdgeColor = 'none';
@@ -407,8 +391,8 @@ surf(x,y,z, ...
     'BackFaceLighting', 'reverselit')
 
 for i = 1:length(Tower.Height)
-    x_(i,:) = x(i,:) * (Tower.Diameter(i) - 2*Tower_WallThickness(i))/Tower.Diameter(i);
-    y_(i,:) = y(i,:) * (Tower.Diameter(i) - 2*Tower_WallThickness(i))/Tower.Diameter(i);
+    x_(i,:) = x(i,:) * (Tower.Diameter(i) - 2*Tower.WallThickness(i))/Tower.Diameter(i);
+    y_(i,:) = y(i,:) * (Tower.Diameter(i) - 2*Tower.WallThickness(i))/Tower.Diameter(i);
 end
 z_ = z;
 

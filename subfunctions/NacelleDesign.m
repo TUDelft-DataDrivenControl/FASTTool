@@ -22,7 +22,7 @@ function NacelleDesign_OpeningFcn(hObject, eventdata, handles, varargin)
 % Set background image
 h = axes('Units', 'Normalized', 'position', [0 0 1 1]);
 uistack(h, 'bottom');
-img = imread('graphics\nacelle.png');
+img = imread(['graphics' filesep 'nacelle.png']);
 imagesc(img);
 set(h, 'HandleVisibility', 'off', 'visible','off')
 

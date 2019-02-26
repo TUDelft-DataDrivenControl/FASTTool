@@ -40,7 +40,7 @@ else
 end
 
 %% ServoDyn input file
-fid = fopen([pwd, '\subfunctions\inputfiles\ServoDyn.dat'], 'wt');
+fid = fopen([pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'ServoDyn.dat'], 'wt');
 fprintf(fid, '------- SERVODYN v1.05.* INPUT FILE --------------------------------------------\n');
 fprintf(fid, 'Created %s.\n', datestr(now));
 fprintf(fid, '---------------------- SIMULATION CONTROL --------------------------------------\n');

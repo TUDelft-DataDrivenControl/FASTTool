@@ -26,7 +26,9 @@ handles.Tower = varargin{3};
 handles.Input = varargin;
 
 % Update input fields
+set(handles.StepWindNotice, 'Visible', 'off')
 set(handles.WindLength_textbox, 'String', num2str(handles.CertificationSettings.Wind.T));
+set(handles.WindLength_textbox, 'Enable', 'off');
 set(handles.WindWidth_textbox, 'String', num2str(handles.CertificationSettings.Wind.Ly));
 set(handles.WindHeight_textbox, 'String', num2str(handles.CertificationSettings.Wind.Lz));
 set(handles.WindStep_textbox, 'String', num2str(handles.CertificationSettings.Wind.dt));
@@ -45,6 +47,15 @@ elseif get(handles.WindMode, 'Value') == 2   % Stepped wind
     set(handles.Event_label, 'Visible', 'on')
     set(handles.Event_unit, 'Visible', 'on')
     set(handles.Event_label, 'String', 'Start at:')
+    set(handles.Event_unit, 'String', 'm/s')
+    set(handles.StepWindNotice, 'Visible', 'on')
+    U = num2str(handles.CertificationSettings.Run.WindSpeed(1));
+    if length(handles.CertificationSettings.Run.WindSpeed) > 1
+        for i = 2:length(handles.CertificationSettings.Run.WindSpeed)
+            U = [U, ', ', num2str(handles.CertificationSettings.Run.WindSpeed(i))];
+        end
+    end
+    set(handles.StepWindNotice, 'String', ['(Up to wind speed(s): ', U, ')']);
 elseif get(handles.WindMode, 'Value') == 3   % Normal wind profile (NWP)
     set(handles.WindEvent, 'Visible', 'off')
     set(handles.Event_label, 'Visible', 'off')
@@ -299,6 +310,7 @@ hold off
 
 %% Wind type
 function WindMode_Callback(hObject, eventdata, handles)
+set(handles.StepWindNotice, 'Visible', 'off')
 if get(hObject, 'Value') == 1       % Steady wind
     set(handles.WindEvent, 'Visible', 'off')
     set(handles.Event_label, 'Visible', 'off')
@@ -310,6 +322,14 @@ elseif get(hObject, 'Value') == 2   % Stepped wind
     set(handles.Event_unit, 'Visible', 'on')
     set(handles.Event_label, 'String', 'Start at:')
     set(handles.Event_unit, 'String', 'm/s')
+    set(handles.StepWindNotice, 'Visible', 'on')
+    U = num2str(handles.CertificationSettings.Run.WindSpeed(1));
+    if length(handles.CertificationSettings.Run.WindSpeed) > 1
+        for i = 2:length(handles.CertificationSettings.Run.WindSpeed)
+            U = [U, ', ', num2str(handles.CertificationSettings.Run.WindSpeed(i))];
+        end
+    end
+    set(handles.StepWindNotice, 'String', ['(Up to wind speed(s): ', U, ')']);
 elseif get(hObject, 'Value') == 3   % Normal wind profile (NWP)
     set(handles.WindEvent, 'Visible', 'off')
     set(handles.Event_label, 'Visible', 'off')

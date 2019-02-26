@@ -9,7 +9,7 @@ else
 end
 
 %% AeroDyn input file
-fid = fopen([pwd, '\subfunctions\inputfiles\AeroDyn.dat'], 'wt');
+fid = fopen([pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'AeroDyn.dat'], 'wt');
 fprintf(fid, '------- AERODYN v15.03.* INPUT FILE ------------------------------------------------\n');
 fprintf(fid, 'Created %s.\n', datestr(now));
 fprintf(fid, '======  General Options  ============================================================================\n');
@@ -72,7 +72,7 @@ fprintf(fid, '------------------------------------------------------------------
 fclose(fid);
 
 %% Blade input file
-fid = fopen([pwd, '\subfunctions\inputfiles\AeroDyn_blade.dat'], 'wt');
+fid = fopen([pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'AeroDyn_blade.dat'], 'wt');
 fprintf(fid, '------- AERODYN v15.00.* BLADE DEFINITION INPUT FILE -------------------------------------\n');
 fprintf(fid, 'Created %s.\n', datestr(now));
 fprintf(fid, '======  Blade Properties =================================================================\n');
@@ -115,7 +115,7 @@ for i = 1:length(Blade.IFoil)
         
     end
 
-    fid = fopen([pwd, '\subfunctions\inputfiles\AeroDyn_', Airfoil.Name{Blade.IFoil(i)}, '.dat'], 'wt');
+    fid = fopen([pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'AeroDyn_', Airfoil.Name{Blade.IFoil(i)}, '.dat'], 'wt');
     fprintf(fid, '! ------------ AirfoilInfo v1.01.x Input File ----------------------------------\n');
     fprintf(fid, ['!', Airfoil.Name{Blade.IFoil(i)}, ' properties\n']);
     fprintf(fid, '!Created %s.\n', datestr(now));
@@ -173,5 +173,5 @@ for i = 1:length(Blade.IFoil)
         fprintf(fid, '%5.4f    %5.4f    %5.4f    %5.4f \n', Airfoil.Alpha{Blade.IFoil(i)}(j), Airfoil.Cl{Blade.IFoil(i)}(j), Airfoil.Cd{Blade.IFoil(i)}(j), Airfoil.Cm{Blade.IFoil(i)}(j));
     end
     fprintf(fid, '! ------------------------------------------------------------------------------\n');
-
+    fclose(fid);
 end

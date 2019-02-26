@@ -18,9 +18,7 @@ FirstOptimal = true;
 Tolerance = 0.0005;
 
 for i = 1:length(U)
-    if (U(i) - ceil(U(i))) == 0
-        disp(['U = ', num2str(U(i))])
-    end
+    disp(['U = ', num2str(U(i))])
     
     if U(i) >= Control.WindSpeed.Cutin && U(i) <= Control.WindSpeed.Cutout
     

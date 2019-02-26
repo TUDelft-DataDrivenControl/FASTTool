@@ -23,13 +23,12 @@ function ControlDesign_OpeningFcn(hObject, eventdata, handles, varargin)
 % Set background image
 h = axes('Units', 'Normalized', 'position', [0 0 1 1]);
 uistack(h, 'bottom');
-img = imread('graphics\control.png');
+img = imread(['graphics' filesep 'control.png']);
 imagesc(img);
 set(h, 'HandleVisibility', 'off', 'visible','off')
 
 % Get input
 handles.Control = varargin{1};
-handles.LinModel = varargin{2};
 handles.Input = varargin(1);
 
 % Update input fields
@@ -508,7 +507,7 @@ function plotbutton_Callback(hObject, eventdata, handles)
         'Box', 'on', ...
         'Layer', 'top', ...
         'Fontsize', 8);
-    xlabel('HSS rotational speed [rad/s]')
+    xlabel('HSS rotational speed [rpm]')
     ylabel('HSS torque [Nm]')
     hold on
     plot(Omega,Torque)

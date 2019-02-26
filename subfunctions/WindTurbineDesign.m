@@ -65,10 +65,6 @@ handles.Lighting.Steel = [0.8, 0.5, 0.9];
 handles.Lighting.Glassfiber = [0.7, 0.7, 0.2];
 handles.Lighting.Nature = [0.9, 0.2, 0.0];
 
-% Linearized model
-handles.LinModel = [];
-set(handles.Linearization, 'CData', imread('icons\linearization_X.png'))
-
 % Turbine plot settings
 handles.Animation.RotationSpeed = 10;
 set(handles.RotationSpeed_textbox, 'String', num2str(handles.Animation.RotationSpeed));
@@ -113,15 +109,15 @@ function varargout = WindTurbineDesign_OutputFcn(hObject, eventdata, handles)
 %% Info button
 function Info_Callback(hObject, eventdata, handles)
 info = [...
-    'Wind turbine design suite v1.08 (September 2017) \n', ...
+    'FASTTool v1.2 (February 2019) \n', ...
     'For the course AE4W09\n', ...
     '\n', ...
     'Works on Windows with Matlab R2016b (v9.1) and above \n', ...
     'Designed for FAST v8.16', ...
     '\n', ...
-    'Course instructor: Michiel Zaayer (M.B.Zaayer@tudelft.nl) \n', ...
-    'GUI created by: René Bos (R.Bos-1@tudelft.nl) \n', ...
-    'Simulink integration: Sebastiaan Mulders (S.P.Mulders@tudelft.nl), Jan-Willem van Wingerden (J.W.vanWingerden@tudelft.nl)'];
+    'Course instructor: Michiel Zaaijer (M.B.Zaayer@tudelft.nl) \n', ...
+    'GUI created by: René Bos (R.Bos-1@tudelft.nl) and Michiel Zaaijer \n', ...
+    'Simulink integration: Sebastiaan Mulders (S.P.Mulders@tudelft.nl) and Jan-Willem van Wingerden (J.W.vanWingerden@tudelft.nl)'];
 helpdlg(sprintf(info), 'Info')
 
 %% Open turbine
@@ -132,7 +128,7 @@ function OpenProject_Callback(hObject, eventdata, handles)
 if FileName
 
     % Set window title
-    Title = ['Wind turbine design ', FileName];
+    Title = ['FASTTool - ', FileName];
     set(handles.WindTurbineDesign, 'Name', Title)
     
     % Load project
@@ -2844,10 +2840,9 @@ for i = 1:length(buttons)
     set(buttons(i), 'Enable', 'off');
 end
 
-% Drivetrain submenu
+% Control submenu
 handles.Control = ControlDesign(...
-    handles.Control, ...
-    handles.LinModel);
+    handles.Control);
 
 % Enable window
 for i = 1:length(buttons)
@@ -2989,36 +2984,13 @@ for i = 1:length(buttons)
 end
 
 % Linearization submenu
-handles.LinModel = Linearization(...
+Linearization(...
     handles.Blade, ...
     handles.Airfoil, ...
     handles.Tower, ...
     handles.Nacelle, ...
     handles.Control, ...
-    handles.Drivetrain, ...
-    handles.LinModel);
-
-% Check if it is a valid model
-if handles.LinModel
-    if exist(handles.LinModel, 'file') == 2
-
-        contents = whos('-file', handles.LinModel);
-        if ismember('Lin', {contents.name}) && ismember('sysm', {contents.name})
-            set(handles.Linearization, 'CData', imread('icons\linearization_V.png'))
-        else
-            set(handles.Linearization, 'CData', imread('icons\linearization_X.png'))
-        end
-
-    else
-
-        set(handles.Linearization, 'CData', imread('icons\linearization_X.png'))
-
-    end
-else
-
-    set(handles.Linearization, 'CData', imread('icons\linearization_X.png'))
-
-end
+    handles.Drivetrain);
 
 % Enable window
 for i = 1:length(buttons)
@@ -3043,7 +3015,7 @@ for i = 1:length(buttons)
     set(buttons(i), 'Enable', 'off');
 end
 
-% Display summary info
+% Certification submenu
 handles.CertificationSettings = Certification(...
     handles.Blade, ...
     handles.Airfoil, ...
@@ -3051,8 +3023,7 @@ handles.CertificationSettings = Certification(...
     handles.Nacelle, ...
     handles.Drivetrain, ...
     handles.Control, ...
-    handles.CertificationSettings, ...
-    handles.LinModel);
+    handles.CertificationSettings);
 
 % Enable window
 for i = 1:length(buttons)

@@ -7,7 +7,7 @@ function [y11_shape, y11_coeff, y11_freq, ...
 if type == 1
     
     % Blade input file
-    props = [pwd, '\subfunctions\inputfiles\BModes_blade.dat'];
+    props = [pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'BModes_blade.dat'];
     n_secs = length(Blade.Radius);
     fid = fopen(props, 'wt');
     fprintf(fid, 'Blade section properties\n');
@@ -38,7 +38,7 @@ end
 if type == 2
     
     % Tower input file
-    props = [pwd, '\subfunctions\inputfiles\BModes_tower.dat'];
+    props = [pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'BModes_tower.dat'];
     n_secs = length(Tower.Height);
     fid = fopen(props, 'wt');
     fprintf(fid, 'Tower section properties\n');
@@ -66,7 +66,7 @@ if type == 2
 end
 
 %% BModes input file
-fid = fopen('subfunctions\inputfiles\BModes.bmi', 'wt');
+fid = fopen([pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'BModes.bmi'], 'wt');
 fprintf(fid, '======================   BModes v1.03 Main Input File  ==================\n');
 fprintf(fid, 'Created %s.\n\n', datestr(now));
 fprintf(fid, '--------- General parameters ---------------------------------------------------------------------\n');
@@ -127,11 +127,11 @@ fprintf(fid, '0. 0.     th_wire:       angle of tension wires wrt the tower axis
 fclose(fid);
 
 %% Run BModes
-system(['subfunctions\bmodes "', pwd, '\subfunctions\inputfiles\BModes.bmi"']);
+system(['subfunctions' filesep 'bmodes "', pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'BModes.bmi"']);
 
 %% Find modes
 % Read output
-fileID = fopen([pwd, '\subfunctions\inputfiles\BModes.out'],'r');
+fileID = fopen([pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'BModes.out'],'r');
 textscan(fileID, '%[^\n\r]', 5, 'ReturnOnError', false);
 data = textscan(fileID, '%s%s%s%s%s%s%[^\n\r]', 'Delimiter', '\t', 'ReturnOnError', false);
 fclose(fileID);

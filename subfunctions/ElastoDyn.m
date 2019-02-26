@@ -17,8 +17,10 @@ if strcmp(mode, 'Linearize')
     YawDOF = 'False';
 end
 
+LengthScale = sqrt(Control.Torque.SpeedC*(2*pi/60) *  Control.Torque.Demanded * Drivetrain.Generator.Efficiency/5000000);
+
 %% ElastoDyn input file
-fid = fopen([pwd, '\subfunctions\inputfiles\ElastoDyn.dat'], 'wt');
+fid = fopen([pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'ElastoDyn.dat'], 'wt');
 fprintf(fid, '------- ELASTODYN v1.03.* INPUT FILE -------------------------------------------\n');
 fprintf(fid, 'Created %s.\n', datestr(now));
 fprintf(fid, '---------------------- SIMULATION CONTROL --------------------------------------\n');
@@ -77,9 +79,9 @@ fprintf(fid, '          0   AzimB1Up    - Azimuth value to use for I/O when blad
 fprintf(fid, ' %5.5f      OverHang    - Distance from yaw axis to rotor apex [3 blades] or teeter pin [2 blades] (meters)\n', -Nacelle.Hub.Overhang);
 fprintf(fid, '      1.912   ShftGagL    - Distance from rotor apex [3 blades] or teeter pin [2 blades] to shaft strain gages [positive for upwind rotors] (meters)\n');
 fprintf(fid, ' %5.1f      ShftTilt    - Rotor shaft tilt angle (degrees)\n', -Nacelle.Hub.ShaftTilt);
-fprintf(fid, ' %5.5f      NacCMxn     - Downwind distance from the tower-top to the nacelle CM (meters)\n', Nacelle.Housing.Length*0.7-Nacelle.Hub.Overhang);
+fprintf(fid, ' %5.5f      NacCMxn     - Downwind distance from the tower-top to the nacelle CM (meters)\n', LengthScale*1.9); 
 fprintf(fid, '          0   NacCMyn     - Lateral  distance from the tower-top to the nacelle CM (meters)\n');
-fprintf(fid, ' %5.2f      NacCMzn     - Vertical distance from the tower-top to the nacelle CM (meters)\n', Nacelle.Housing.Diameter*0.35);
+fprintf(fid, ' %5.2f      NacCMzn     - Vertical distance from the tower-top to the nacelle CM (meters)\n', 0.35*Nacelle.Housing.Diameter);
 fprintf(fid, '   -3.09528   NcIMUxn     - Downwind distance from the tower-top to the nacelle IMU (meters)\n');
 fprintf(fid, '          0   NcIMUyn     - Lateral  distance from the tower-top to the nacelle IMU (meters)\n');
 fprintf(fid, '    2.23336   NcIMUzn     - Vertical distance from the tower-top to the nacelle IMU (meters)\n');
@@ -94,11 +96,11 @@ fprintf(fid, '---------------------- MASS AND INERTIA --------------------------
 fprintf(fid, '          0   TipMass(1)  - Tip-brake mass, blade 1 (kg)\n');
 fprintf(fid, '          0   TipMass(2)  - Tip-brake mass, blade 2 (kg)\n');
 fprintf(fid, '          0   TipMass(3)  - Tip-brake mass, blade 3 (kg) [unused for 2 blades]\n');
-fprintf(fid, ' %5.2E      HubMass     - Hub mass (kg)\n', Nacelle.Hub.Mass);
-fprintf(fid, ' 115.926E3  HubIner     - Hub inertia about rotor axis [3 blades] or teeter axis [2 blades] (kg m^2)\n');
+fprintf(fid, ' %5.3E      HubMass     - Hub mass (kg)\n', Nacelle.Hub.Mass);
+fprintf(fid, ' %5.3E      HubIner     - Hub inertia about rotor axis [3 blades] or teeter axis [2 blades] (kg m^2)\n', (Nacelle.Hub.Mass/56780.0)*(Blade.Radius(1)/1.5)^2*115926.0);
 fprintf(fid, ' %5.3f      GenIner     - Generator inertia about HSS (kg m^2)\n', Drivetrain.Generator.HSSInertia);
-fprintf(fid, ' %5.2E      NacMass     - Nacelle mass (kg)\n', Nacelle.Housing.Mass);
-fprintf(fid, '2.60789E+06   NacYIner    - Nacelle inertia about yaw axis (kg m^2)\n');
+fprintf(fid, ' %5.3E      NacMass     - Nacelle mass (kg)\n', Nacelle.Housing.Mass);
+fprintf(fid, ' %5.3E      NacYIner    - Nacelle inertia about yaw axis (kg m^2)\n', 3.0*Nacelle.Housing.Mass*(LengthScale*1.9)^2); % Factor 3 comes from NacYIner/(NacMass*NacCMxn)^2 of NREL 5 MW turbine
 fprintf(fid, '          0   YawBrMass   - Yaw bearing mass (kg)\n');
 fprintf(fid, '          0   PtfmMass    - Platform mass (kg)\n');
 fprintf(fid, '          0   PtfmRIner   - Platform inertia for roll tilt rotation about the platform CM (kg m^2)\n');
@@ -222,7 +224,7 @@ fprintf(fid, '------------------------------------------------------------------
 fclose(fid);
 
 %% Blade input file
-fid = fopen([pwd, '\subfunctions\inputfiles\ElastoDyn_blade.dat'], 'wt');
+fid = fopen([pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'ElastoDyn_blade.dat'], 'wt');
 fprintf(fid, '------- ELASTODYN V1.00.* INDIVIDUAL BLADE INPUT FILE --------------------------\n');
 fprintf(fid, 'Created %s.\n', datestr(now));
 fprintf(fid, '---------------------- BLADE PARAMETERS ----------------------------------------\n');
@@ -267,7 +269,7 @@ fprintf(fid, '    %9.4f   BldEdgSh(6) -            , coeff of x^6\n', Blade.Edge
 fclose(fid);
 
 %% Tower input file
-fid = fopen([pwd '\subfunctions\inputfiles\ElastoDyn_tower.dat'], 'wt');
+fid = fopen([pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'ElastoDyn_tower.dat'], 'wt');
 fprintf(fid, '------- ELASTODYN V1.00.* TOWER INPUT FILE -------------------------------------\n');
 fprintf(fid, 'Created %s.\n', datestr(now));
 fprintf(fid, '---------------------- TOWER PARAMETERS ----------------------------------------\n');

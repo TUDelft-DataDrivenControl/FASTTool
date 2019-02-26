@@ -22,7 +22,7 @@ function BladeDesign_OpeningFcn(hObject, eventdata, handles, varargin)
 % Set background image
 h = axes('Units', 'Normalized', 'position', [0 0 1 1]);
 uistack(h, 'bottom');
-img = imread('graphics\blades.png');
+img = imread(['graphics' filesep 'blades.png']);
 imagesc(img);
 set(h, 'HandleVisibility', 'off', 'visible','off')
 

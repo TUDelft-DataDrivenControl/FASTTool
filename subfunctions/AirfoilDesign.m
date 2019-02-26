@@ -53,7 +53,7 @@ set(handles.AirfoilCoordinates_TableSize_textbox, 'String', length(handles.Airfo
 set(handles.AirfoilCoordinates_TableSize_slider, 'Value', length(handles.Airfoil.Geometry{i}(1,:)));
 
 % Update airfoil plot
-DrawAirfoil(handles)
+%DrawAirfoil(handles)
 
 % Update handles structure
 guidata(hObject, handles);
@@ -256,7 +256,7 @@ if ~isempty(name)
     AirfoilCollection_Callback(handles.AirfoilCollection, eventdata, handles);
 
     % Update airfoil plot
-    DrawAirfoil(handles)
+    %DrawAirfoil(handles)
 
 end
 
@@ -381,7 +381,7 @@ set(handles.AirfoilCoordinates_TableSize_textbox, 'String', length(handles.Airfo
 set(handles.AirfoilCoordinates_TableSize_slider, 'Value', length(handles.Airfoil.Geometry{i}(1,:)));
 
 % Update airfoil plot
-DrawAirfoil(handles)
+%DrawAirfoil(handles)
 
 % Update handles structure
 guidata(hObject, handles);
@@ -391,7 +391,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 %% Plot airfoil polars
-function PlotButton_Callback(hObject, eventdata, handles)
+function PlotProperties_Callback(hObject, eventdata, handles)
 
 % Plot settings
 Plot = figure();
@@ -443,6 +443,36 @@ xlim([0 0.025])
 xlabel('Cd [-]')
 ylabel('Cl [-]')
 
+%% Plot airfoil shape
+function PlotShape_Callback(hObject, eventdata, handles)
+% Plot settings
+Plot = figure();
+set(Plot, 'Name', 'Airfoil shape')
+
+% Plot settings
+%axis(handles.AirfoilPlot);
+%cla reset;
+set(gca, ...
+    'XTick', 0.0:0.1:1.0, ...
+    'YTick', -0.5:0.1:0.5, ...
+    'XMinorTick', 'on', ...
+    'YMinorTick', 'on', ...
+    'Box', 'on', ...
+    'Layer', 'top', ...
+    'Fontsize', 8);
+axis equal
+xlim([-0.1 1.1])
+ylim([-0.6 0.6])
+
+% Plot shape
+x = cell2mat(handles.AirfoilCoordinates_Table.Data(:,1));
+y = cell2mat(handles.AirfoilCoordinates_Table.Data(:,2));
+hold on
+plot([-0.1 1.1], [0 0], '--', 'Color', [0.5 0.5 0.5], 'LineWidth', 0.25)
+patch(x, y, [0 165, 213]/255, 'EdgeColor', 0.5*[0 165, 213]/255, 'LineWidth', 1)
+hold off
+
+%{
 %% Draw airfoil
 function DrawAirfoil(handles)
 
@@ -468,7 +498,7 @@ hold on
 plot([-0.1 1.1], [0 0], '--', 'Color', [0.5 0.5 0.5], 'LineWidth', 0.25)
 patch(x, y, [0 165, 213]/255, 'EdgeColor', 0.5*[0 165, 213]/255, 'LineWidth', 1)
 hold off
-
+%}
 %% Airfoil performance - table size text box
 function AirfoilPerformance_TableSize_textbox_Callback(hObject, eventdata, handles)
 
@@ -694,7 +724,7 @@ if strcmpi(char(eventdata.Modifier),'control') && strcmp(eventdata.Key, 'v')
     set(hObject, 'Data', Table);
 
 end
-
+%{
 %% Airfoil coordinates - cell edit redraw
 function AirfoilCoordinates_Table_CellEditCallback(hObject, eventdata, handles)
 
@@ -703,7 +733,7 @@ i = get(handles.AirfoilCollection,'Value');
 
 % Update airfoil plot
 DrawAirfoil(handles)
-
+%}
 %% Positive stall angle - text box
 function StallAngle1_textbox_Callback(hObject, eventdata, handles)
 if isnan(str2double(get(hObject,'String')))
