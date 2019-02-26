@@ -7,6 +7,6 @@ slprj
 ownScripts/
 
 *.asv
-
+*.slxc
 *.r2016b
 *.r2018b
