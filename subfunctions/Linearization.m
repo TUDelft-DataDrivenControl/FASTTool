@@ -56,6 +56,59 @@ function varargout = Linearization_OutputFcn(hObject, eventdata, handles)
 % Close figure
 delete(hObject)
 
+%% Set full load wind speed range
+function SetFullLoad_Callback(hObject, eventdata, handles)
+
+% Set input
+Blade = handles.Blade;
+Airfoil = handles.Airfoil;
+Drivetrain = handles.Drivetrain;
+Control = handles.Control;
+
+% Find rated wind speed by comparing demanded torque at rotational speed C
+disp('Searching for rated wind speed...')
+OmegaC = Control.Torque.SpeedC*2*pi/60;
+U1 = Control.WindSpeed.Cutin;
+U2 = Control.WindSpeed.Cutout;
+[~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, (OmegaC/Drivetrain.Gearbox.Ratio)*Blade.Radius(end)/U1);
+Qr1 = 0.5*CQr*1.225*U1^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+[~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, (OmegaC/Drivetrain.Gearbox.Ratio)*Blade.Radius(end)/U2);
+Qr2 = 0.5*CQr*1.225*U2^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+
+if Qr1 > Control.Torque.Demanded
+    Urated = Control.WindSpeed.Cutin;
+elseif Qr2 < Control.Torque.Demanded
+    Urated = Control.WindSpeed.Cutout;
+else
+    success = false;
+    for iter = 1:100
+        U_new = U1 + abs((Control.Torque.Demanded-Qr1)/(Qr1-Qr2))*(U2-U1);
+        [~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, (OmegaC/Drivetrain.Gearbox.Ratio)*Blade.Radius(end)/U_new);
+        Qr_new = 0.5*CQr*1.225*U_new^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+        if abs((Qr_new - Control.Torque.Demanded)/Control.Torque.Demanded) < 0.005
+            success = true;
+            break
+        end
+        if Qr_new < Control.Torque.Demanded
+           U1 = U_new;
+           Qr1 = Qr_new;
+        else
+           U2 = U_new;
+           Qr2 = Qr_new;
+        end
+    end
+    Urated = U_new;
+    if ~success
+        warning('Tolerance not met during iteration of axial induction factor')
+    else
+        % Propose values for the wind speed range
+        set(handles.WindSpeed_From, 'String', int2str(ceil(Urated)));
+        set(handles.WindSpeed_To, 'String', int2str(floor(handles.Control.WindSpeed.Cutout)))
+        disp(' ')
+        disp('... full load wind speed range set')
+    end
+end
+
 %% Set file names
 function SetLinModel_Callback(hObject, eventdata, handles)
 
