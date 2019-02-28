@@ -162,11 +162,11 @@ delete(hObject)
 %% Edit cells - checkbox
 function EditCells_checkbox_Callback(hObject, eventdata, handles)
 if get(hObject, 'Value') == 1
-    set(handles.Table, 'ColumnEditable', [true true true]);
+    set(handles.Table, 'ColumnEditable', [true true true true true true]);
     set(handles.TableSize_textbox, 'Enable', 'on')
     set(handles.TableSize_slider, 'Enable', 'on')
 else
-    set(handles.Table, 'ColumnEditable', [false false false]);
+    set(handles.Table, 'ColumnEditable', [false false false false false false]);
     set(handles.TableSize_textbox, 'Enable', 'off')
     set(handles.TableSize_slider, 'Enable', 'off')
 end
@@ -314,4 +314,94 @@ end
 function TableSize_slider_CreateFcn(hObject, eventdata, handles)
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+
+%% --- Executes on button press in checkboxes.
+function PlotLPF_checkbox_Callback(hObject, eventdata, handles)
+% Do nothing
+
+function PlotPI_checkbox_Callback(hObject, eventdata, handles)
+% Do nothing
+
+function PlotNotch_checkbox_Callback(hObject, eventdata, handles)
+% Do nothing
+
+function PlotLoopGain_checkbox_Callback(hObject, eventdata, handles)
+% Do nothing
+
+function PlotNom_checkbox_Callback(hObject, eventdata, handles)
+% Do nothing
+
+
+%% --- Executes on button presses
+function PlotBode_pushbutton_Callback(hObject, eventdata, handles)
+BodePlot(handles, false)
+% Evaluate checkbox states
+% Plot OL FRF
+
+function UndockBode_pushbutton_Callback(hObject, eventdata, handles)
+% Plot in undocked figure
+
+function BodePlot(handles, undock)
+cla reset;
+
+w = logspace(-2,2,1000);
+if undock
+    Plot = figure();
+    set(Plot, 'Name', 'Bode diagram')
+end
+
+Controller = tf(1,1);
+if get(handles.PlotLPF_checkbox, 'Value')
+    Controller = Controller*tf(handles.Control.LPFCutOff,[1 handles.Control.LPFCutOff]);
+end
+if get(handles.PlotPI_checkbox, 'Value')
+    Controller = Controller*tf([handles.Control.Pitch.Kp handles.Control.Pitch.Ki], [1 0]);
+end
+if get(handles.PlotNotch_checkbox, 'Value')
+    Controller = Controller*tf(1);
+end
+
+ControllerFRF = freqresp(Controller,w);
+MagResponse = mag2db(squeeze(abs(ControllerFRF)));
+PhaseResponse = angle(squeeze(ControllerFRF))*180/pi;
+
+axes(handles.BodeMag_axes);
+xlabel('Operating range [rpm]')
+ylabel('Mode frequency [Hz]')
+semilogx(w,MagResponse);
+
+axes(handles.BodePhase_axes);
+xlabel('Operating range [rpm]')
+ylabel('Mode frequency [Hz]')
+semilogx(w,PhaseResponse);
+
+
+% --- Executes on button press in pushbutton6.
+function pushbutton6_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on selection change in LinWindSpeed_listbox.
+function LinWindSpeed_listbox_Callback(hObject, eventdata, handles)
+% hObject    handle to LinWindSpeed_listbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns LinWindSpeed_listbox contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from LinWindSpeed_listbox
+
+
+% --- Executes during object creation, after setting all properties.
+function LinWindSpeed_listbox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to LinWindSpeed_listbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end
