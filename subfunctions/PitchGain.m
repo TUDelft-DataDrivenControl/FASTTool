@@ -41,6 +41,21 @@ for i = 1:handles.TableSize
     else
         TableData(i,3) = num2cell(handles.Control.Pitch.KiGS(i));
     end
+    if isnan(handles.Control.Pitch.Notch_beta1GS(i))
+        TableData(i,4) = num2cell([]);
+    else
+        TableData(i,4) = num2cell(handles.Control.Pitch.Notch_beta1GS(i));
+    end
+    if isnan(handles.Control.Pitch.Notch_beta2GS(i))
+        TableData(i,5) = num2cell([]);
+    else
+        TableData(i,5) = num2cell(handles.Control.Pitch.Notch_beta2GS(i));
+    end
+    if isnan(handles.Control.Pitch.Notch_wnGS(i))
+        TableData(i,6) = num2cell([]);
+    else
+        TableData(i,6) = num2cell(handles.Control.Pitch.Notch_wnGS(i));
+    end
 end
 set(handles.Constant_Ki_textbox, 'String', num2str(handles.Control.Pitch.Ki));
 set(handles.Constant_Kp_textbox, 'String', num2str(handles.Control.Pitch.Kp));
@@ -115,6 +130,9 @@ if handles.Save
     ScheduledPitchAngles = nan(handles.TableSize,1);
     KiGS = nan(handles.TableSize,1);
     KpGS = nan(handles.TableSize,1);
+    Notch_beta1GS = nan(handles.TableSize,1);
+    Notch_beta2GS = nan(handles.TableSize,1);
+    Notch_wnGS = nan(handles.TableSize,1);
 
     % Find invalid cells
     for i = 1:size(Table,1)
@@ -142,6 +160,21 @@ if handles.Save
         else
             KiGS(i) = Table{i,3};
         end
+        if invalid(i,4)
+            Notch_beta1GS(i) = 0;
+        else
+            Notch_beta1GS(i) = Table{i,4};
+        end
+        if invalid(i,5)
+            Notch_beta2GS(i) = 0;
+        else
+            Notch_beta2GS(i) = Table{i,5};
+        end
+        if invalid(i,6)
+            Notch_wnGS(i) = 0;
+        else
+            Notch_wnGS(i) = Table{i,6};
+        end
     end
 
     
@@ -150,6 +183,10 @@ if handles.Save
     handles.Control.Pitch.ScheduledPitchAngles = ScheduledPitchAngles(~isnan(ScheduledPitchAngles));
     handles.Control.Pitch.KpGS = KpGS(~isnan(KpGS));
     handles.Control.Pitch.KiGS = KiGS(~isnan(KiGS));
+    handles.Control.Pitch.Notch_beta1GS = Notch_beta1GS(~isnan(Notch_beta1GS));
+    handles.Control.Pitch.Notch_beta2GS = Notch_beta2GS(~isnan(Notch_beta2GS));
+    handles.Control.Pitch.Notch_wnGS = Notch_wnGS(~isnan(Notch_wnGS));
+    
     handles.Control.Pitch.Scheduled = get(handles.GainScheduled,'Value');
     varargout{1} = handles.Control;
 else
@@ -318,23 +355,73 @@ end
 
 %% --- Executes on button press in checkboxes.
 function PlotLPF_checkbox_Callback(hObject, eventdata, handles)
-% Do nothing
+    [AllControllersDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles);
+    if AllControllersDisabled
+        EnableDisableButtons(handles, 'off')
+    else
+        EnableDisableButtons(handles, 'on')
+    end
+
+    if AllControllersEnabled
+        set(handles.PlotLoopGain_checkbox, 'Enable', 'on');
+    else
+        set(handles.PlotLoopGain_checkbox, 'Enable', 'off');
+        set(handles.PlotLoopGain_checkbox, 'Value', 0);
+    end
 
 function PlotPI_checkbox_Callback(hObject, eventdata, handles)
-% Do nothing
+    [AllControllersDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles);
+    if AllControllersDisabled
+        EnableDisableButtons(handles, 'off')
+    else
+        EnableDisableButtons(handles, 'on')
+    end
+
+    if AllControllersEnabled
+        set(handles.PlotLoopGain_checkbox, 'Enable', 'on');
+    else
+        set(handles.PlotLoopGain_checkbox, 'Enable', 'off');
+        set(handles.PlotLoopGain_checkbox, 'Value', 0);
+    end
+
 
 function PlotNotch_checkbox_Callback(hObject, eventdata, handles)
-% Do nothing
+    [AllControllersDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles);
+    if AllControllersDisabled
+        EnableDisableButtons(handles, 'off')
+    else
+        EnableDisableButtons(handles, 'on')
+    end
+
+    if AllControllersEnabled
+        set(handles.PlotLoopGain_checkbox, 'Enable', 'on');
+    else
+        set(handles.PlotLoopGain_checkbox, 'Enable', 'off');
+        set(handles.PlotLoopGain_checkbox, 'Value', 0);
+    end
+
+function PlotNom_checkbox_Callback(hObject, eventdata, handles)
+    [AllControllersDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles);
+    if AllControllersDisabled
+        EnableDisableButtons(handles, 'off')
+    else
+        EnableDisableButtons(handles, 'on')
+    end
+
+    if AllControllersEnabled
+        set(handles.PlotLoopGain_checkbox, 'Enable', 'on');
+    else
+        set(handles.PlotLoopGain_checkbox, 'Enable', 'off');
+        set(handles.PlotLoopGain_checkbox, 'Value', 0);
+    end
 
 function PlotLoopGain_checkbox_Callback(hObject, eventdata, handles)
 % Do nothing
 
-function PlotNom_checkbox_Callback(hObject, eventdata, handles)
-% Do nothing
-
-
 %% --- Executes on button presses
 function PlotBode_pushbutton_Callback(hObject, eventdata, handles)
+cla(handles.BodeMag_axes,'reset')
+cla(handles.BodePhase_axes,'reset')
 BodePlot(handles, false)
 % Evaluate checkbox states
 % Plot OL FRF
@@ -343,65 +430,205 @@ function UndockBode_pushbutton_Callback(hObject, eventdata, handles)
 % Plot in undocked figure
 
 function BodePlot(handles, undock)
-cla reset;
+    cla reset;
 
-w = logspace(-2,2,1000);
-if undock
-    Plot = figure();
-    set(Plot, 'Name', 'Bode diagram')
-end
+    % Evaluate state of buttons checked
+    [AllDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles)
+    
+    % Create transfer function of filters in series according to selection GUI
+    Plant = tf(1,1)*ones(1,length(handles.SelectedListboxContents));
+    for i = 1:length(handles.SelectedListboxContents)
+        selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Lin.Pitch);
+        Plant(1,i) = pi/30*handles.sysm{selIndex,1}(33,9);
+    end
+    
+    Controller = tf(1,1)*ones(1,length(handles.SelectedListboxContents));
+    if get(handles.PlotLPF_checkbox, 'Value')
+        Controller(1,:) = Controller(1,:)*tf(handles.Control.LPFCutOff,[1 handles.Control.LPFCutOff]);
+    end
+    if get(handles.PlotPI_checkbox, 'Value')
+        if handles.Control.Pitch.Scheduled
+            for i = 1:length(handles.SelectedListboxContents)
+                selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Control.Pitch.ScheduledPitchAngles);
+                Controller(1,i) = Controller(1,i)*tf([handles.Control.Pitch.KpGS(selIndex) handles.Control.Pitch.KiGS(selIndex)], [1 0]);
+            end
+        else
+            Controller(1,:) = Controller(1,:)*tf([handles.Control.Pitch.Kp handles.Control.Pitch.Ki], [1 0]);
+        end
+    end
+    if get(handles.PlotNotch_checkbox, 'Value')
+        if handles.Control.Pitch.Scheduled
+            for i = 1:length(handles.SelectedListboxContents)
+                selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Control.Pitch.ScheduledPitchAngles);
+                if any([handles.Control.Pitch.Notch_beta1GS(selIndex) handles.Control.Pitch.Notch_beta2GS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)] == 0)
+                    Controller(1,i) = Controller(1,i);
+                else
+                    Controller(1,i) = Controller(1,i)*tf([1 2*handles.Control.Pitch.Notch_beta1GS(selIndex)*handles.Control.Pitch.Notch_wnGS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)^2], [1 2*handles.Control.Pitch.Notch_beta2GS(selIndex)*handles.Control.Pitch.Notch_wnGS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)^2]);
+                end
+            end
+        else
+            % No notch yet
+        end
+    end
 
-Controller = tf(1,1);
-if get(handles.PlotLPF_checkbox, 'Value')
-    Controller = Controller*tf(handles.Control.LPFCutOff,[1 handles.Control.LPFCutOff]);
-end
-if get(handles.PlotPI_checkbox, 'Value')
-    Controller = Controller*tf([handles.Control.Pitch.Kp handles.Control.Pitch.Ki], [1 0]);
-end
-if get(handles.PlotNotch_checkbox, 'Value')
-    Controller = Controller*tf(1);
-end
+    % Evaluate the user choise to only see the controller, or to show the
+    % loop-gain
+    LoopGain = tf(1,1)*ones(1,length(handles.SelectedListboxContents));
+    if get(handles.PlotLoopGain_checkbox, 'Value')
+        for i = 1:length(handles.SelectedListboxContents)
+            selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Lin.Pitch);
+            LoopGain(1,i) = series(Controller(:,i), Plant(:,i));
+        end
+    end
 
-ControllerFRF = freqresp(Controller,w);
-MagResponse = mag2db(squeeze(abs(ControllerFRF)));
-PhaseResponse = angle(squeeze(ControllerFRF))*180/pi;
+    w = logspace(-2,2,1000);
+    ControllerFRF = freqresp(Controller, w);
+    ControllerMagResponse = mag2db(squeeze(abs(ControllerFRF)));
+    ControllerPhaseResponse = angle(squeeze(ControllerFRF))*180/pi;
+    if get(handles.PlotLoopGain_checkbox, 'Value')
+        LoopGainFRF = freqresp(LoopGain, w);
+        LoopGainMagResponse = mag2db(squeeze(abs(LoopGainFRF)));
+        LoopGainPhaseResponse = angle(squeeze(LoopGainFRF))*180/pi;
+    end
+    if get(handles.PlotNom_checkbox, 'Value')
+        PlantFRF = freqresp(Plant, w);
+        PlantMagResponse = mag2db(squeeze(abs(PlantFRF)));
+        PlantPhaseResponse = angle(squeeze(PlantFRF))*180/pi;
+    end
 
-axes(handles.BodeMag_axes);
-xlabel('Operating range [rpm]')
-ylabel('Mode frequency [Hz]')
-semilogx(w,MagResponse);
+    if undock
+        Plot = figure();
+        set(Plot, 'Name', 'Bode diagram')
+    end
 
-axes(handles.BodePhase_axes);
-xlabel('Operating range [rpm]')
-ylabel('Mode frequency [Hz]')
-semilogx(w,PhaseResponse);
+    axes(handles.BodeMag_axes);
+    if get(handles.PlotNom_checkbox, 'Value')
+        semilogx(w, PlantMagResponse), hold on
+    end
+    if not(AllDisabled)
+        semilogx(w, ControllerMagResponse, '--'), hold on
+    end
+    if get(handles.PlotLoopGain_checkbox, 'Value'), hold on
+        semilogx(w, LoopGainMagResponse);
+    end
+    semilogx(w, zeros(1,length(w)), 'LineStyle', '--', 'Color', 'k', 'LineWidth', 0.5)
+    grid on
+    
+    axes(handles.BodePhase_axes);
+    if get(handles.PlotNom_checkbox, 'Value')
+        semilogx(w, PlantPhaseResponse), hold on
+    end
+    if not(AllDisabled)
+        semilogx(w, ControllerPhaseResponse, '--'), hold on
+    end
+    if get(handles.PlotLoopGain_checkbox, 'Value')
+        semilogx(w, LoopGainPhaseResponse), hold on
+    end
+    grid on
 
 
-% --- Executes on button press in pushbutton6.
-function pushbutton6_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton6 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+% --- Executes on button press in LoadLinMat_pushbutton.
+function LoadLinMat_pushbutton_Callback(hObject, eventdata, handles)
+    % Get file name
+    [FileName,PathName] = uigetfile('*.mat', 'Select existing linearized model');
+    handles.LinModelFileName = [PathName, FileName];
 
+    % Check if it is a valid model
+    if FileName
+        if exist(handles.LinModelFileName, 'file') == 2
+
+            contents = whos('-file', handles.LinModelFileName);
+            if ismember('Lin', {contents.name}) && ismember('sysm', {contents.name})
+                % Load the linear models .mat-file
+                load(handles.LinModelFileName)
+                handles.Lin = Lin;
+                handles.sysm = sysm;
+                set(handles.LinFileCheck_text, 'String', 'Valid model loaded')
+                set(handles.LinFileCheck_text, 'ForegroundColor', [0.0 1.0 0.0])
+
+                % Show the above-rated linear model pitch angles in listbox
+                LinListBoxItemsIndex = find([0 (diff(Lin.Pitch) > 0)]);
+                handles.FirstAboveRatedLinModelIndex = LinListBoxItemsIndex(1);
+                set(handles.LinWindSpeed_listbox, 'string', {Lin.Pitch(LinListBoxItemsIndex)})
+
+                % Allow multiple pitch angle selection in listbox
+                set(handles.LinWindSpeed_listbox, 'Max', 20, 'Min', 0);
+
+                % Enable disabled GUI elements 
+                EnableDisableListbox(handles, 'on')
+                
+            else
+                set(handles.LinFileCheck_text, 'String', 'Invalid model selected')
+                set(handles.LinFileCheck_text, 'ForegroundColor', [1.0 0.0 0.0])
+                
+                % Disable GUI elements 
+                EnableDisableListbox(handles, 'off')
+                EnableDisableCheckBoxes(handles, 'off')
+                EnableDisableButtons(handles, 'off')
+            end
+        end
+    else
+        % Say when an invalid file is selected
+        set(handles.LinFileCheck_text, 'String', 'No file loaded')
+        
+        % Disable GUI elements 
+        EnableDisableListbox(handles, 'off')
+        EnableDisableCheckBoxes(handles, 'off')
+        EnableDisableButtons(handles, 'off')
+    end
+    % Store in handles
+    guidata(hObject, handles);
 
 % --- Executes on selection change in LinWindSpeed_listbox.
 function LinWindSpeed_listbox_Callback(hObject, eventdata, handles)
-% hObject    handle to LinWindSpeed_listbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns LinWindSpeed_listbox contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from LinWindSpeed_listbox
-
+    handles.SelectedListboxContents = cellstr(get(hObject,'String'));
+    handles.SelectedListboxIndex = get(hObject,'Value');
+    handles.SelectedListboxContents = handles.SelectedListboxContents(handles.SelectedListboxIndex);
+    if isempty(handles.SelectedListboxContents)
+        EnableDisableCheckBoxes(handles, 'off')
+        EnableDisableButtons(handles, 'off')
+    else
+        EnableDisableCheckBoxes(handles, 'on')
+    end
+    guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function LinWindSpeed_listbox_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to LinWindSpeed_listbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
 
-% Hint: listbox controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+function [index] = findnearest(array, value)
+    [~,index] = (min(abs(array - value)));
+    
+function EnableDisableListbox(handles, state)
+    set(handles.LinWindSpeed_listbox, 'Enable', state)
+    
+function EnableDisableCheckBoxes(handles, state)
+    set(handles.PlotLPF_checkbox, 'Enable', state)
+    set(handles.PlotPI_checkbox, 'Enable', state)
+    set(handles.PlotNotch_checkbox, 'Enable', state)
+    set(handles.PlotNom_checkbox, 'Enable', state)
+    
+function EnableDisableButtons(handles, state)
+    set(handles.PlotBode_pushbutton, 'Enable', state)
+    set(handles.UndockBode_pushbutton, 'Enable', state)
+    set(handles.PlotReset_pushbutton, 'Enable', state)
+    
+function [AllDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles)
+    checkBox(1) = get(handles.PlotLPF_checkbox, 'Value');
+    checkBox(2) = get(handles.PlotPI_checkbox, 'Value');
+    checkBox(3) = get(handles.PlotNotch_checkbox, 'Value');
+    checkBox(4) = get(handles.PlotNom_checkbox, 'Value');
+    
+    AllDisabled = all(checkBox(1:4) == 0);
+    AllControllersEnabled = all(checkBox(1:3) == 1);
+    
+% --- Executes on button press in PlotReset_pushbutton.
+function PlotReset_pushbutton_Callback(hObject, eventdata, handles)
+    cla(handles.BodeMag_axes,'reset')
+    cla(handles.BodePhase_axes,'reset')
+%     childrenMag = get(handles.BodeMag_axes, 'children');
+%     childrenPhase = get(handles.BodePhase_axes, 'children');
+%     delete(childrenMag(:));
+%     delete(childrenPhase(:));
