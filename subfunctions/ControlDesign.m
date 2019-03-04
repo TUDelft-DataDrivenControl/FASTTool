@@ -34,7 +34,7 @@ handles.Input = varargin(1);
 % Update input fields
 set(handles.WindSpeed_Cutin_textbox, 'String', num2str(handles.Control.WindSpeed.Cutin));
 set(handles.WindSpeed_Cutout_textbox, 'String', num2str(handles.Control.WindSpeed.Cutout));
-set(handles.Control_LPFCutOff_textbox, 'String', num2str(handles.Control.LPFCutOff));
+set(handles.Control_GenSpeedLPFCutOff_textbox, 'String', num2str(handles.Control.Torque.LowPassCutOffFreq));
 set(handles.Control_DT_textbox, 'String', num2str(handles.Control.DT));
 set(handles.Brake_Torque_textbox, 'String', num2str(handles.Control.Brake.Torque));
 set(handles.Brake_Deploytime_textbox, 'String', num2str(handles.Control.Brake.Deploytime));
@@ -132,15 +132,15 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 %% Low-pass filter cut-off frequency - text box
-function Control_LPFCutOff_textbox_Callback(hObject, eventdata, handles)
+function Control_GenSpeedLPFCutOff_textbox_Callback(hObject, eventdata, handles)
 if str2double(get(hObject,'String')) < 0
     set(hObject, 'String', '0')
 elseif isnan(str2double(get(hObject,'String')))
-    set(hObject, 'String', num2str(handles.Control.LPFCutOff))
+    set(hObject, 'String', num2str(handles.Control.Torque.LowPassCutOffFreq))
 end
-handles.Control.LPFCutOff = str2double(get(hObject,'String'));
+handles.Control.Torque.LowPassCutOffFreq = str2double(get(hObject,'String'));
 guidata(hObject, handles);
-function Control_LPFCutOff_textbox_CreateFcn(hObject, eventdata, handles)
+function Control_GenSpeedLPFCutOff_textbox_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
