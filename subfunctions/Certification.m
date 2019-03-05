@@ -487,7 +487,6 @@ RPM = OmegaU * 60/(2*pi);
 disp('Setting controller parameters...')
 assignin('base', 'Drivetrain', Drivetrain)
 assignin('base', 'Control', Control)
-ControllerDesign(Control);
 
 % Turbine input files
 TMax = CertificationSettings.Run.Time;
