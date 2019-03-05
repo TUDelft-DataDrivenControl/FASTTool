@@ -66,6 +66,11 @@ for i = 1:handles.TableSize
 end
 set(handles.Constant_Ki_textbox, 'String', num2str(handles.Control.Pitch.Ki));
 set(handles.Constant_Kp_textbox, 'String', num2str(handles.Control.Pitch.Kp));
+
+set(handles.Constant_Notch_B1_textbox, 'String', num2str(handles.Control.Pitch.Notch_beta1));
+set(handles.Constant_Notch_B2_textbox, 'String', num2str(handles.Control.Pitch.Notch_beta2));
+set(handles.Constant_Notch_wn_textbox, 'String', num2str(handles.Control.Pitch.Notch_wn));
+
 set(handles.TableSize_textbox, 'String', length(handles.Control.Pitch.KpGS));
 set(handles.TableSize_slider, 'Value', length(handles.Control.Pitch.KpGS));
 set(handles.Table, 'Data', TableData);
@@ -76,6 +81,10 @@ if handles.Control.Pitch.Scheduled
     set(handles.GainScheduled, 'Value', 1);
     set(handles.Constant_Ki_textbox, 'Enable', 'off')
     set(handles.Constant_Kp_textbox, 'Enable', 'off')
+    set(handles.LPFCutOff_text, 'Enable', 'off')
+    set(handles.Constant_Notch_B1_textbox, 'Enable', 'off')
+    set(handles.Constant_Notch_B2_textbox, 'Enable', 'off')
+    set(handles.Constant_Notch_wn_textbox, 'Enable', 'off')
     set(handles.Table, 'Enable', 'on')
     set(handles.EditCells_checkbox, 'Enable', 'on')
     set(handles.EditCells_checkbox, 'Value', 0)
@@ -86,6 +95,10 @@ else
     set(handles.GainScheduled, 'Value', 0);
     set(handles.Constant_Ki_textbox, 'Enable', 'on')
     set(handles.Constant_Kp_textbox, 'Enable', 'on')
+    set(handles.LPFCutOff_text, 'Enable', 'on')
+    set(handles.Constant_Notch_B1_textbox, 'Enable', 'on')
+    set(handles.Constant_Notch_B2_textbox, 'Enable', 'on')
+    set(handles.Constant_Notch_wn_textbox, 'Enable', 'on')
     set(handles.Table, 'Enable', 'off')
     set(handles.EditCells_checkbox, 'Enable', 'off')
     set(handles.EditCells_checkbox, 'Value', 0)
@@ -142,6 +155,10 @@ if handles.Save
     
     handles.Control.Pitch.Ki = str2double(get(handles.Constant_Ki_textbox,'String'));
     handles.Control.Pitch.Kp = str2double(get(handles.Constant_Kp_textbox,'String'));
+    
+    handles.Control.Pitch.Notch_beta1 = str2double(get(handles.Constant_Notch_B1_textbox,'String'));
+    handles.Control.Pitch.Notch_beta2 = str2double(get(handles.Constant_Notch_B2_textbox,'String'));
+    handles.Control.Pitch.Notch_wn = str2double(get(handles.Constant_Notch_wn_textbox,'String'));
     
     if get(handles.FirstOrderLPF_radio, 'Value')
         handles.Control.Pitch.LowPassOrder = 1;
@@ -231,8 +248,15 @@ function ConstantGain_Callback(hObject, eventdata, handles)
 if get(hObject, 'Value')
     set(handles.Constant_Ki_textbox, 'Enable', 'on')
     set(handles.Constant_Kp_textbox, 'Enable', 'on')
+    set(handles.Constant_Notch_B1_textbox, 'Enable', 'on')
+    set(handles.Constant_Notch_B2_textbox, 'Enable', 'on')
+    set(handles.Constant_Notch_wn_textbox, 'Enable', 'on')
+    set(handles.LPFCutOff_text, 'Enable', 'on')
     set(handles.Table, 'Enable', 'off')
     set(handles.EditCells_checkbox, 'Enable', 'off')
+    
+    handles.Control.Pitch.Scheduled = get(handles.GainScheduled,'Value');
+    guidata(hObject, handles);
 end
     
 %% Gain scheduling - radio button
@@ -240,8 +264,15 @@ function GainScheduled_Callback(hObject, eventdata, handles)
 if get(hObject, 'Value')
     set(handles.Constant_Ki_textbox, 'Enable', 'off')
     set(handles.Constant_Kp_textbox, 'Enable', 'off')
+    set(handles.Constant_Notch_B1_textbox, 'Enable', 'off')
+    set(handles.Constant_Notch_B2_textbox, 'Enable', 'off')
+    set(handles.Constant_Notch_wn_textbox, 'Enable', 'off')
+    set(handles.LPFCutOff_text, 'Enable', 'off')
     set(handles.Table, 'Enable', 'on')
     set(handles.EditCells_checkbox, 'Enable', 'on')
+   
+    handles.Control.Pitch.Scheduled = get(handles.GainScheduled,'Value');
+    guidata(hObject, handles);
 end
 
 %% Constant integration constant - text box
@@ -385,11 +416,11 @@ function PlotBode_pushbutton_Callback(hObject, eventdata, handles)
 cla(handles.BodeMag_axes,'reset')
 cla(handles.BodePhase_axes,'reset')
 BodePlot(handles, false)
-% Evaluate checkbox states
-% Plot OL FRF
 
 function UndockBode_pushbutton_Callback(hObject, eventdata, handles)
-% Plot in undocked figure
+cla(handles.BodeMag_axes,'reset')
+cla(handles.BodePhase_axes,'reset')
+BodePlot(handles, true)
 
 function BodePlot(handles, undock)
     cla reset;
@@ -427,10 +458,18 @@ function BodePlot(handles, undock)
         if handles.Control.Pitch.Scheduled
             for i = 1:length(handles.SelectedListboxContents)
                 selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Control.Pitch.ScheduledPitchAngles);
-                Controller(1,i) = Controller(1,i)*tf([handles.Control.Pitch.KpGS(selIndex) handles.Control.Pitch.KiGS(selIndex)], [1 0]);
+                if all([handles.Control.Pitch.KpGS(selIndex) handles.Control.Pitch.KiGS(selIndex)] == 0)
+                    Controller(1,i) = Controller(1,i);
+                else
+                    Controller(1,i) = Controller(1,i)*tf([handles.Control.Pitch.KpGS(selIndex) handles.Control.Pitch.KiGS(selIndex)], [1 0]);
+                end
             end
         else
-            Controller(1,:) = Controller(1,:)*tf([handles.Control.Pitch.Kp handles.Control.Pitch.Ki], [1 0]);
+            if all([handles.Control.Pitch.Kp handles.Control.Pitch.Ki] == 0)
+                Controller(1,i) = Controller(1,i);
+            else
+                Controller(1,:) = Controller(1,:)*tf([handles.Control.Pitch.Kp handles.Control.Pitch.Ki], [1 0]);
+            end
         end
     end
     if get(handles.PlotNotch_checkbox, 'Value')
@@ -444,7 +483,11 @@ function BodePlot(handles, undock)
                 end
             end
         else
-            % No notch yet
+            if any([handles.Control.Pitch.Notch_beta1 handles.Control.Pitch.Notch_beta2 handles.Control.Pitch.Notch_wn] == 0)
+                Controller(1,:) = Controller(1,:);
+            else
+                Controller(1,:) = Controller(1,:)*tf([1 2*handles.Control.Pitch.Notch_beta1*handles.Control.Pitch.Notch_wn handles.Control.Pitch.Notch_wn^2], [1 2*handles.Control.Pitch.Notch_beta2*handles.Control.Pitch.Notch_wn handles.Control.Pitch.Notch_wn^2]);
+            end
         end
     end
 
@@ -476,9 +519,10 @@ function BodePlot(handles, undock)
     if undock
         Plot = figure();
         set(Plot, 'Name', 'Bode diagram')
+        subplot(211)
+    else
+        axes(handles.BodeMag_axes);
     end
-
-    axes(handles.BodeMag_axes);
     if get(handles.PlotNom_checkbox, 'Value')
         semilogx(w, PlantMagResponse), hold on
     end
@@ -489,9 +533,16 @@ function BodePlot(handles, undock)
         semilogx(w, LoopGainMagResponse);
     end
     semilogx(w, zeros(1,length(w)), 'LineStyle', '--', 'Color', 'k', 'LineWidth', 0.5)
+    xlabel('Frequency [rad/s]')
+    ylabel('Magnitude [dB]')
+    title('Bode plot')
     grid on
     
-    axes(handles.BodePhase_axes);
+    if undock
+        subplot(212)
+    else
+        axes(handles.BodePhase_axes);
+    end
     if get(handles.PlotNom_checkbox, 'Value')
         semilogx(w, PlantPhaseResponse), hold on
     end
@@ -501,8 +552,9 @@ function BodePlot(handles, undock)
     if get(handles.PlotLoopGain_checkbox, 'Value')
         semilogx(w, LoopGainPhaseResponse), hold on
     end
+    xlabel('Frequency [rad/s]')
+    ylabel('Phase [deg]')
     grid on
-
 
 % --- Executes on button press in LoadLinMat_pushbutton.
 function LoadLinMat_pushbutton_Callback(hObject, eventdata, handles)
@@ -728,3 +780,42 @@ function handles = UpdateHandlesWithTableData(handles)
 function Table_CellEditCallback(hObject, eventdata, handles)
 handles = UpdateHandlesWithTableData(handles);
 guidata(hObject, handles);
+
+
+
+function Constant_Notch_B1_textbox_Callback(hObject, eventdata, handles)
+if isnan(str2double(get(hObject,'String')))
+    set(hObject, 'String', num2str(handles.Control.Pitch.Notch_beta1))
+end
+handles.Control.Pitch.Notch_beta1 = str2double(get(hObject,'String'));
+guidata(hObject, handles);
+function Constant_Notch_B1_textbox_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function Constant_Notch_B2_textbox_Callback(hObject, eventdata, handles)
+if isnan(str2double(get(hObject,'String')))
+    set(hObject, 'String', num2str(handles.Control.Pitch.Notch_beta2))
+end
+handles.Control.Pitch.Notch_beta2 = str2double(get(hObject,'String'));
+guidata(hObject, handles);
+function Constant_Notch_B2_textbox_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function Constant_Notch_wn_textbox_Callback(hObject, eventdata, handles)
+if isnan(str2double(get(hObject,'String')))
+    set(hObject, 'String', num2str(handles.Control.Pitch.Notch_wn))
+end
+handles.Control.Pitch.Notch_wn = str2double(get(hObject,'String'));
+guidata(hObject, handles);
+function Constant_Notch_wn_textbox_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
