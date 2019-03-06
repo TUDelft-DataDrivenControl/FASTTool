@@ -31,7 +31,7 @@ for i = 1:handles.TableSize
     if isnan(handles.Control.Pitch.ScheduledPitchAngles(i))
         TableData(i,1) = num2cell([]);
     else
-        TableData(i,1) = num2cell(handles.Control.Pitch.ScheduledPitchAngles(i));
+        TableData(i,1) = num2cell(handles.Control.Pitch.ScheduledPitchAngles(i)*180/pi);
     end
     if isnan(handles.Control.Pitch.KpGS(i))
         TableData(i,2) = num2cell([]);
@@ -361,6 +361,7 @@ function PlotLPF_checkbox_Callback(hObject, eventdata, handles)
         set(handles.PlotLoopGain_checkbox, 'Enable', 'off');
         set(handles.PlotLoopGain_checkbox, 'Value', 0);
     end
+    BodePlot(handles, false)
 
 function PlotPI_checkbox_Callback(hObject, eventdata, handles)
     [AllControllersDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles);
@@ -376,6 +377,7 @@ function PlotPI_checkbox_Callback(hObject, eventdata, handles)
         set(handles.PlotLoopGain_checkbox, 'Enable', 'off');
         set(handles.PlotLoopGain_checkbox, 'Value', 0);
     end
+    BodePlot(handles, false)
 
 
 function PlotNotch_checkbox_Callback(hObject, eventdata, handles)
@@ -392,6 +394,7 @@ function PlotNotch_checkbox_Callback(hObject, eventdata, handles)
         set(handles.PlotLoopGain_checkbox, 'Enable', 'off');
         set(handles.PlotLoopGain_checkbox, 'Value', 0);
     end
+    BodePlot(handles, false)
 
 function PlotNom_checkbox_Callback(hObject, eventdata, handles)
     [AllControllersDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles);
@@ -407,23 +410,18 @@ function PlotNom_checkbox_Callback(hObject, eventdata, handles)
         set(handles.PlotLoopGain_checkbox, 'Enable', 'off');
         set(handles.PlotLoopGain_checkbox, 'Value', 0);
     end
+    BodePlot(handles, false)
 
 function PlotLoopGain_checkbox_Callback(hObject, eventdata, handles)
-% Do nothing
+	BodePlot(handles, false)
 
 %% --- Executes on button presses
-function PlotBode_pushbutton_Callback(hObject, eventdata, handles)
-cla(handles.BodeMag_axes,'reset')
-cla(handles.BodePhase_axes,'reset')
-BodePlot(handles, false)
-
 function UndockBode_pushbutton_Callback(hObject, eventdata, handles)
-cla(handles.BodeMag_axes,'reset')
-cla(handles.BodePhase_axes,'reset')
-BodePlot(handles, true)
+    BodePlot(handles, true)
 
 function BodePlot(handles, undock)
-    cla reset;
+   	cla(handles.BodeMag_axes,'reset')
+    cla(handles.BodePhase_axes,'reset')
 
     % Evaluate state of buttons checked
     [AllDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles);
@@ -431,7 +429,7 @@ function BodePlot(handles, undock)
     % Create transfer function of filters in series according to selection GUI
     Plant = tf(1,1)*ones(1,length(handles.SelectedListboxContents));
     for i = 1:length(handles.SelectedListboxContents)
-        selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Lin.Pitch);
+        selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Lin.Pitch*180/pi);
         Plant(1,i) = pi/30*handles.sysm{selIndex,1}(33,9);
     end
     
@@ -439,7 +437,7 @@ function BodePlot(handles, undock)
     if get(handles.PlotLPF_checkbox, 'Value')
         if handles.Control.Pitch.Scheduled
             for i = 1:length(handles.SelectedListboxContents)
-                selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Control.Pitch.ScheduledPitchAngles);
+                selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Control.Pitch.ScheduledPitchAngles*180/pi);
                 if handles.Control.Pitch.LowPassOrder == 1
                     Controller(1,i) = Controller(1,i)*tf(handles.Control.Pitch.LowPassCutOffFreqGS(selIndex),[1 handles.Control.Pitch.LowPassCutOffFreqGS(selIndex)]);
                 else
@@ -457,7 +455,7 @@ function BodePlot(handles, undock)
     if get(handles.PlotPI_checkbox, 'Value')
         if handles.Control.Pitch.Scheduled
             for i = 1:length(handles.SelectedListboxContents)
-                selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Control.Pitch.ScheduledPitchAngles);
+                selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Control.Pitch.ScheduledPitchAngles*180/pi);
                 if all([handles.Control.Pitch.KpGS(selIndex) handles.Control.Pitch.KiGS(selIndex)] == 0)
                     Controller(1,i) = Controller(1,i);
                 else
@@ -475,7 +473,7 @@ function BodePlot(handles, undock)
     if get(handles.PlotNotch_checkbox, 'Value')
         if handles.Control.Pitch.Scheduled
             for i = 1:length(handles.SelectedListboxContents)
-                selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Control.Pitch.ScheduledPitchAngles);
+                selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Control.Pitch.ScheduledPitchAngles*180/pi);
                 if any([handles.Control.Pitch.Notch_beta1GS(selIndex) handles.Control.Pitch.Notch_beta2GS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)] == 0)
                     Controller(1,i) = Controller(1,i);
                 else
@@ -496,7 +494,7 @@ function BodePlot(handles, undock)
     LoopGain = tf(1,1)*ones(1,length(handles.SelectedListboxContents));
     if get(handles.PlotLoopGain_checkbox, 'Value')
         for i = 1:length(handles.SelectedListboxContents)
-            selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Lin.Pitch);
+            selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Lin.Pitch*180/pi);
             LoopGain(1,i) = series(Controller(:,i), Plant(:,i));
         end
     end
@@ -533,9 +531,8 @@ function BodePlot(handles, undock)
         semilogx(w, LoopGainMagResponse);
     end
     semilogx(w, zeros(1,length(w)), 'LineStyle', '--', 'Color', 'k', 'LineWidth', 0.5)
-    xlabel('Frequency [rad/s]')
+    xticklabels([])
     ylabel('Magnitude [dB]')
-    title('Bode plot')
     grid on
     
     if undock
@@ -578,7 +575,7 @@ function LoadLinMat_pushbutton_Callback(hObject, eventdata, handles)
                 % Show the above-rated linear model pitch angles in listbox
                 LinListBoxItemsIndex = find([0 (diff(Lin.Pitch) > 0)]);
                 handles.FirstAboveRatedLinModelIndex = LinListBoxItemsIndex(1);
-                set(handles.LinWindSpeed_listbox, 'string', {Lin.Pitch(LinListBoxItemsIndex)})
+                set(handles.LinWindSpeed_listbox, 'string', {Lin.Pitch(LinListBoxItemsIndex)*180/pi})
 
                 % Allow multiple pitch angle selection in listbox
                 set(handles.LinWindSpeed_listbox, 'Max', 20, 'Min', 0);
@@ -642,7 +639,6 @@ function EnableDisableCheckBoxes(handles, state)
     set(handles.PlotNom_checkbox, 'Enable', state)
     
 function EnableDisableButtons(handles, state)
-    set(handles.PlotBode_pushbutton, 'Enable', state)
     set(handles.UndockBode_pushbutton, 'Enable', state)
     set(handles.PlotReset_pushbutton, 'Enable', state)
     
@@ -767,7 +763,7 @@ function handles = UpdateHandlesWithTableData(handles)
         end
     end
     
-    handles.Control.Pitch.ScheduledPitchAngles = ScheduledPitchAngles(~isnan(ScheduledPitchAngles));
+    handles.Control.Pitch.ScheduledPitchAngles = ScheduledPitchAngles(~isnan(ScheduledPitchAngles))*pi/180;
     handles.Control.Pitch.KpGS = KpGS(~isnan(KpGS));
     handles.Control.Pitch.KiGS = KiGS(~isnan(KiGS));
     handles.Control.Pitch.Notch_beta1GS = Notch_beta1GS(~isnan(Notch_beta1GS));
