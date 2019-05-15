@@ -213,7 +213,7 @@ Drivetrain.Gearbox.Efficiency = 1;
 %{
 % (2) Scale the HSS inertia from the reference machine (to avoid issues
 % with reaching very high rotor speeds during the linearization of some
-% direct-drive machines). Assuming that P ~ Mass, Radius² ~ P^(2/3), we get
+% direct-drive machines). Assuming that P ~ Mass, Radius? ~ P^(2/3), we get
 % a relation in the shape of I/Iref = (P/Pref)^(5/3) * (RPM_ref/RPM)^2.
 Prated = Control.Torque.SpeedC*(2*pi/60) *  Control.Torque.Demanded * Drivetrain.Generator.Efficiency;
 Drivetrain.Generator.HSSInertia = 534.116 * (Prated/(5e6))^(5/3) * (12.1*97/Control.Torque.SpeedC)^2;
@@ -223,7 +223,7 @@ Drivetrain.Generator.HSSInertia = 534.116 * (Prated/(5e6))^(5/3) * (12.1*97/Cont
 disp('Writing input files...')
 
 % Simulink settings
-TSim = 60;
+TSim = 150;
 FAST_InputFileName = [pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'FAST.fst'];
 
 % Turbine input files
