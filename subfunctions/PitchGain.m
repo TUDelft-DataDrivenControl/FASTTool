@@ -117,6 +117,21 @@ end
 % Update handles structure
 guidata(hObject, handles);
 
+% Adapt to screen size
+monitor = get(groot, 'MonitorPosition');
+width = monitor(1,3);
+window = get(handles.Window_group, 'Position');
+needed_width = window(3)+16;
+slider_pos = get(handles.Window_slider, 'Position');
+pos = get(hObject, 'Position');
+if width >= needed_width
+    set(hObject, 'Position', [pos(1) pos(2) pos(3) pos(4)-slider_pos(4)]);
+    set(handles.Window_group, 'Position', [0 0 window(3) window(4)]);
+    set(handles.Window_slider, 'Visible', 'off');
+else
+    set(handles.Window_slider, 'Position', [0 0 pos(3) slider_pos(4)]);
+end
+
 % Halt window
 uiwait(handles.PitchGain);
 
@@ -814,4 +829,29 @@ guidata(hObject, handles);
 function Constant_Notch_wn_textbox_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+% --- Executes on slider movement.
+function Window_slider_Callback(hObject, eventdata, handles)
+% hObject    handle to Window_slider (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+xpos = get(hObject, 'Value');
+sliderpos = get(hObject, 'Position');
+windowpos = get(handles.Window_group, 'Position');
+windowpos(1) = xpos*(sliderpos(3)-windowpos(3));
+set(handles.Window_group, 'Position', windowpos);
+
+% --- Executes during object creation, after setting all properties.
+function Window_slider_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Window_slider (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
