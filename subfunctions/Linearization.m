@@ -34,6 +34,13 @@ set(handles.WindSpeed_Step, 'String', '1')
 set(handles.LinAmount, 'String', '1')
 set(handles.LinRotations, 'String', '1')
 
+% Check initial status of LinearizeAboveRated only checkbox
+if handles.LinearizeAboveRatedOnly_checkbox.Value
+    handles.LinearizationMode = 'LinearizeAboveRated';
+else
+    handles.LinearizationMode = 'Linearize';
+end
+    
 % Update handles structure
 guidata(hObject, handles);
 
@@ -71,9 +78,9 @@ OmegaC = Control.Torque.SpeedC*2*pi/60;
 U1 = Control.WindSpeed.Cutin;
 U2 = Control.WindSpeed.Cutout;
 [~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, (OmegaC/Drivetrain.Gearbox.Ratio)*Blade.Radius(end)/U1);
-Qr1 = 0.5*CQr*1.225*U1^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+Qr1 = CalculateAerodynamicTorque(handles, CQr, U1);
 [~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, (OmegaC/Drivetrain.Gearbox.Ratio)*Blade.Radius(end)/U2);
-Qr2 = 0.5*CQr*1.225*U2^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+Qr2 = CalculateAerodynamicTorque(handles, CQr, U2);
 
 if Qr1 > Control.Torque.Demanded
     Urated = Control.WindSpeed.Cutin;
@@ -158,6 +165,7 @@ end
 
 LinAmount = str2double(get(handles.LinAmount, 'String'));
 LinRotations = str2double(get(handles.LinRotations, 'String'));
+LinMode = handles.LinearizationMode;
 
 disp('Starting linearization...')
 disp(' ')
@@ -227,8 +235,8 @@ TSim = 150;
 FAST_InputFileName = [pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'FAST.fst'];
 
 % Turbine input files
-AeroDyn(Blade,Airfoil,Tower,'Linearize');
-ServoDyn(Drivetrain,Control,'Linearize');
+AeroDyn(Blade,Airfoil,Tower,LinMode);
+ServoDyn(Drivetrain,Control,LinMode);
 
 % Preload the OutList
 load([pwd, filesep 'subfunctions' filesep 'OutList.mat'])
@@ -242,14 +250,14 @@ for j = 1:length(WindSpeeds)
     disp(['Linearizing at U = ', num2str(WindSpeeds(j), '%5.2f'), ' m/s, ', num2str(RPM(j), '%5.2f'), ' rpm, ', num2str(PitchAngle(j), '%5.2f'), ' deg pitch'])
     
     % Set initial RPM and pitch angle in ElastoDyn input file
-    ElastoDyn(Blade,Tower,Nacelle,Drivetrain,Control,'Linearize',RPM(j),PitchAngle(j));
+    ElastoDyn(Blade,Tower,Nacelle,Drivetrain,Control,LinMode,RPM(j),PitchAngle(j));
     
     % Set linearization times for 10 deg azimuth step (after 30 s)
     LinAziPositions = linspace(0,360*LinRotations,LinAmount+1);
     LinTimes = TSim + Control.DT * round(LinAziPositions(2:end)/(RPM(j)*6) / Control.DT);
     TMax = max(LinTimes)+1.0;
     
-    FASTinput(Control.DT, TMax, 'Linearize', LinTimes);
+    FASTinput(Control.DT, TMax, LinMode, LinTimes);
 
     % Wind input file
     Wind.Type = 1;
@@ -299,6 +307,17 @@ end
 
 end
 
+%% Aerodynamic torque
+function Q = CalculateAerodynamicTorque(handles, CQr, windSpeed)
+    % Set input
+    Blade = handles.Blade;
+    Drivetrain = handles.Drivetrain;    
+
+    rhoAir = 1.225; % Density of air [kg/m3]
+    
+    % Calculate aerodynamic torque
+    Q = 0.5*CQr*rhoAir*windSpeed^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+
 %% Wind speed steps
 function WindSpeed_From_Callback(hObject, eventdata, handles)
 function WindSpeed_From_CreateFcn(hObject, eventdata, handles)
@@ -325,3 +344,23 @@ function LinRotations_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in LinearizeAboveRatedOnly_checkbox.
+function LinearizeAboveRatedOnly_checkbox_Callback(hObject, eventdata, handles)
+% Hint: get(hObject,'Value') returns toggle state of LinearizeAboveRatedOnly_checkbox
+if get(hObject,'Value') 
+    % Set above-rated wind speed region
+    SetFullLoad_Callback(hObject, eventdata, handles)
+    
+    handles.LinearizationMode = 'LinearizeAboveRated';
+else
+    % Propose values for the wind speed range
+    set(handles.WindSpeed_From, 'String', int2str(ceil(handles.Control.WindSpeed.Cutin)))
+    set(handles.WindSpeed_To, 'String', int2str(floor(handles.Control.WindSpeed.Cutout)))
+    
+    handles.LinearizationMode = 'Linearize';
+end
+
+% Update handles structure
+guidata(hObject, handles);

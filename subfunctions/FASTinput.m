@@ -4,7 +4,7 @@ linearize = 'False';
 NLinTimes = 1;
 LinTimes = '60';
 if length(varargin) >= 1
-    if strcmpi(varargin{1},'Linearize')
+    if contains(varargin{1},'Linearize')
         linearize = 'True';
     end
     T = varargin{2};

@@ -1,6 +1,6 @@
 function AeroDyn(Blade,Airfoil,Tower,mode)
 
-if strcmpi(mode,'Linearize')
+if contains(mode,'Linearize')
     AFAeroMod = 1;
     WakeMod = 1;
 else

@@ -12,7 +12,7 @@ end
 if length(varargin) >= 2
     BlPitch = varargin{2};
 end
-if strcmp(mode, 'Linearize')
+if contains(mode, 'Linearize')
     GenDOF = 'True';
     YawDOF = 'False';
 end

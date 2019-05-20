@@ -10,16 +10,30 @@ PitManRat = Control.Pitch.Maxrate;
 GenTiStr = 'True';
 
 if strcmpi(mode,'Linearize')
-    
-    PCMode = 0;
     VSContrl = 1;
     HSSBrMode = 0;
+    PCMode = 0;
+        
+    SIG_SySp = 9999.9;
+    SIG_RtTq = 9999.9;
+    SIG_PORt = 9999.9;
+elseif strcmpi(mode,'LinearizeAboveRated')
+    VSContrl = 0;
+    HSSBrMode = 0;
+    PCMode = 0;
     
+    SIG_SySp = Control.Torque.SpeedC;
+    SIG_RtTq = Control.Torque.Demanded;
+    SIG_PORt = 1.0;
 else
     
     PCMode = 4;
     VSContrl = 4;
     HSSBrMode = 1;
+    
+    SIG_SySp = 9999.9;
+    SIG_RtTq = 9999.9;
+    SIG_PORt = 9999.9;
 
     if mode == 1       % Power production
     elseif mode == 2   % Power production with fault
@@ -73,10 +87,10 @@ fprintf(fid, '      %5.4f   VS_RtTq      - Rated generator torque/constant gener
 fprintf(fid, '      %5.4f   VS_Rgn2K     - Generator torque constant in Region 2 for simple variable-speed generator control (HSS side) (N-m/rpm^2) [used only when VSContrl=1]\n', (pi/30)^2 * Control.Torque.OptGain);
 fprintf(fid, ' 9.9999E-06   VS_SlPc      - Rated generator slip percentage in Region 2 1/2 for simple variable-speed generator control (%%) [used only when VSContrl=1]\n');
 fprintf(fid, '---------------------- SIMPLE INDUCTION GENERATOR ------------------------------\n');
-fprintf(fid, '     9999.9   SIG_SlPc     - Rated generator slip percentage (%%) [used only when VSContrl=0 and GenModel=1]\n');
-fprintf(fid, '     9999.9   SIG_SySp     - Synchronous (zero-torque) generator speed (rpm) [used only when VSContrl=0 and GenModel=1]\n');
-fprintf(fid, '     9999.9   SIG_RtTq     - Rated torque (N-m) [used only when VSContrl=0 and GenModel=1]\n');
-fprintf(fid, '     9999.9   SIG_PORt     - Pull-out ratio (Tpullout/Trated) (-) [used only when VSContrl=0 and GenModel=1]\n');
+fprintf(fid, ' 9.9999E-06   SIG_SlPc     - Rated generator slip percentage (%%) [used only when VSContrl=0 and GenModel=1]\n');
+fprintf(fid, '     %5.1f    SIG_SySp     - Synchronous (zero-torque) generator speed (rpm) [used only when VSContrl=0 and GenModel=1]\n', SIG_SySp);
+fprintf(fid, '     %5.1f    SIG_RtTq     - Rated torque (N-m) [used only when VSContrl=0 and GenModel=1]\n', SIG_RtTq);
+fprintf(fid, '     %5.1f    SIG_PORt     - Pull-out ratio (Tpullout/Trated) (-) [used only when VSContrl=0 and GenModel=1]\n', SIG_PORt);
 fprintf(fid, '---------------------- THEVENIN-EQUIVALENT INDUCTION GENERATOR -----------------\n');
 fprintf(fid, '     9999.9   TEC_Freq     - Line frequency [50 or 60] (Hz) [used only when VSContrl=0 and GenModel=2]\n');
 fprintf(fid, '       9998   TEC_NPol     - Number of poles [even integer > 0] (-) [used only when VSContrl=0 and GenModel=2]\n');
