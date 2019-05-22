@@ -491,7 +491,7 @@ assignin('base', 'Control', Control)
 % Turbine input files
 TMax = CertificationSettings.Run.Time;
 FASTinput(Control.DT, TMax);
-AeroDyn(Blade,Airfoil,Tower,CertificationSettings.Mode.Type);
+AeroDyn(Blade,Airfoil,Tower,string(CertificationSettings.Mode.Type));
 
 % Send to base workspace and make structures available for Simulink and run the simulation
 assignin('base', 'FAST_InputFileName', [pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'FAST.fst']);
@@ -544,10 +544,10 @@ for j = 1:length(CertificationSettings.Run.WindSpeed)
         assignin('base', 'P_InitAngle', P_InitAngle);
 
         % Set operation mode in ElastoDyn file
-        ElastoDyn(Blade,Tower,Nacelle,Drivetrain,Control,CertificationSettings.Mode.Type,RPM_Init,P_InitAngle);
+        ElastoDyn(Blade,Tower,Nacelle,Drivetrain,Control,string(CertificationSettings.Mode.Type),RPM_Init,P_InitAngle);
 
         % Set operation mode in ServoDyn file
-        ServoDyn(Drivetrain,Control,CertificationSettings.Mode.Type,CertificationSettings.Mode.Actiontime);
+        ServoDyn(Drivetrain,Control,string(CertificationSettings.Mode.Type),CertificationSettings.Mode.Actiontime);
 
         % Wind input file
         disp('Generating wind file...')

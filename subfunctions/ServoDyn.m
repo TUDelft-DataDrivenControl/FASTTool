@@ -35,17 +35,17 @@ else
     VS_RtGnSp = Control.Torque.SpeedC;
     VS_Rgn2K = (pi/30)^2 * Control.Torque.OptGain;
     
-    if mode == 1       % Power production
-    elseif mode == 2   % Power production with fault
+    if str2double(mode) == 1       % Power production
+    elseif str2double(mode) == 2   % Power production with fault
         TimGenOf = varargin{1};
         THSSBrDp = TimGenOf + Control.Brake.Delay;
-    elseif mode == 3   % Startup
+    elseif str2double(mode) == 3   % Startup
         GenTiStr = 'False';
-    elseif mode == 5   % Emergency shutdown
+    elseif str2double(mode) == 5   % Emergency shutdown
         THSSBrDp = varargin{1};
-    elseif mode == 6   % Idling
+    elseif str2double(mode) == 6   % Idling
         TimGenOn = 9999.9;
-    elseif mode == 7   % Parked
+    elseif str2double(mode) == 7   % Parked
         TimGenOn = 9999.9;
         THSSBrDp = 0;
         Control.Brake.Deploytime = 0;
