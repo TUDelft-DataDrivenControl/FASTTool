@@ -445,7 +445,9 @@ function BodePlot(handles, undock)
     Plant = tf(1,1)*ones(1,length(handles.SelectedListboxContents));
     for i = 1:length(handles.SelectedListboxContents)
         selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Lin.Pitch*180/pi);
-        Plant(1,i) = pi/30*handles.sysm{selIndex,1}(33,9);
+        iGenSpeed = find(contains(handles.sysm{selIndex,1}.OutputName, 'ED GenSpeed'));
+        iBlPitchCPC = find(contains(handles.sysm{selIndex,1}.InputName, 'collective blade-pitch'));
+        Plant(1,i) = pi/30*handles.sysm{selIndex,1}(iGenSpeed,iBlPitchCPC);
     end
     
     Controller = tf(1,1)*ones(1,length(handles.SelectedListboxContents));
