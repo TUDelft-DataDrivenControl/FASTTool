@@ -1,4 +1,4 @@
-function InflowWind(Wind,U,H,R)
+function InflowWind(Wind,U,H,R,windSeed)
 
 % Wind types:
 % 1 Steady wind
@@ -134,8 +134,12 @@ if Wind.Type == 4 || Wind.Type == 5 || Wind.Type == 6 || Wind.Type == 8
     end
     
     % Turbulence seed
-    rng('shuffle')
-    seed = randi([-2147483648, 2147483647]);
+    if windSeed < 0
+        rng('shuffle')
+        seed = randi([-2147483648, 2147483647]);
+    else
+        seed = windSeed;
+    end
     
     % Write TurbSim input file
     fid = fopen('subfunctions\inputfiles\wind.inp', 'wt');

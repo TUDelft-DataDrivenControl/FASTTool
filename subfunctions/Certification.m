@@ -36,6 +36,15 @@ handles.Drivetrain = varargin{5};
 handles.Control = varargin{6};
 handles.CertificationSettings = varargin{7};
 
+% Adjust simulation time if a stepped wind is requested
+if handles.CertificationSettings.Wind.Type == 2
+    amountOfSteps = ceil(handles.CertificationSettings.Run.WindSpeed(1) - handles.CertificationSettings.Wind.Step) + 1;
+    handles.CertificationSettings.Run.Time = amountOfSteps*handles.CertificationSettings.Wind.StepDuration;
+    set(handles.Runtime_textbox, 'Enable', 'off');
+else
+    set(handles.Runtime_textbox, 'Enable', 'on');
+end
+
 % Update input fields
 set(handles.Runtime_textbox, 'String', num2str(handles.CertificationSettings.Run.Time));
 handles.CertificationSettings.Wind.T = handles.CertificationSettings.Run.Time;
@@ -47,6 +56,7 @@ if length(handles.CertificationSettings.Run.WindSpeed) > 1
 end
 set(handles.WindSpeed_textbox, 'String', U);
 set(handles.NSeeds_textbox, 'String', num2str(handles.CertificationSettings.Run.Seeds));
+set(handles.Edit_SeedNumber, 'String', num2str(handles.CertificationSettings.Run.SeedNumber));
 handles.OutputFile = {};
 set(handles.OutputFiles_text, 'String', '<empty>')
 
@@ -108,6 +118,17 @@ elseif handles.CertificationSettings.Mode.Type == 6   % Idling
 elseif handles.CertificationSettings.Mode.Type == 7   % Parked
     set(handles.OperationSettings, 'CData', imread(['icons' filesep 'operation_idle.png']))
     set(handles.OperationSettings, 'TooltipString', 'Parked')
+end
+
+% Update random seed fields
+if handles.CertificationSettings.Run.RandomSeed
+    set(handles.Edit_SeedNumber, 'Enable', 'off')
+    set(handles.Radio_RandomSeedYes, 'Value', 1)
+    set(handles.Radio_RandomSeedNo, 'Value', 0)
+else
+    set(handles.Edit_SeedNumber, 'Enable', 'on')
+    set(handles.Radio_RandomSeedYes, 'Value', 0)
+    set(handles.Radio_RandomSeedNo, 'Value', 1)
 end
 
 % Disable start button
@@ -195,6 +216,16 @@ elseif handles.CertificationSettings.Wind.Type == 10   % Extreme direction chang
 elseif handles.CertificationSettings.Wind.Type == 11   % Extreme coherent gust (ECD)
     set(hObject, 'CData', imread(['icons' filesep 'wind_ecg.png']))
     set(hObject, 'TooltipString', 'Extreme coherent gust (ECD)')
+end
+
+% Adjust simulation time if a stepped wind is requested
+if handles.CertificationSettings.Wind.Type == 2
+    amountOfSteps = ceil(handles.CertificationSettings.Run.WindSpeed(1) - handles.CertificationSettings.Wind.Step) + 1;
+    handles.CertificationSettings.Run.Time = amountOfSteps*handles.CertificationSettings.Wind.StepDuration;
+    set(handles.Runtime_textbox, 'Enable', 'off');
+    set(handles.Runtime_textbox, 'String', handles.CertificationSettings.Run.Time);
+else
+    set(handles.Runtime_textbox, 'Enable', 'on');
 end
 
 % Update handles structure
@@ -442,6 +473,7 @@ Lz = CertificationSettings.Wind.Lz;
 dt = CertificationSettings.Wind.dt;
 Ny = CertificationSettings.Wind.Ny;
 Nz = CertificationSettings.Wind.Nz;
+windSeed = handles.CertificationSettings.Run.SeedNumber;
 
 % Run modal analysis for 0 rpm
 disp('Preparing input files...')
@@ -551,7 +583,7 @@ for j = 1:length(CertificationSettings.Run.WindSpeed)
 
         % Wind input file
         disp('Generating wind file...')
-        InflowWind(CertificationSettings.Wind,U,Tower.HubHeight,Blade.Radius(end))
+        InflowWind(CertificationSettings.Wind,U,Tower.HubHeight,Blade.Radius(end),windSeed)
 
         % Preload the OutList
         load([pwd, filesep 'subfunctions' filesep 'OutList.mat'])
@@ -591,3 +623,39 @@ end
 warning('on','all')
 disp('')
 disp('Completed!')
+
+
+
+function Edit_SeedNumber_Callback(hObject, eventdata, handles)
+if str2double(get(hObject,'String')) < 1
+    set(hObject, 'String', '1')
+elseif isnan(str2double(get(hObject,'String')))
+    set(hObject, 'String', '1')
+end
+handles.CertificationSettings.Run.SeedNumber = ceil(str2double(get(hObject,'String')));
+guidata(hObject, handles);
+UpdateOutputName(handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function Edit_SeedNumber_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in Radio_RandomSeedYes.
+function Radio_RandomSeedYes_Callback(hObject, eventdata, handles)
+if get(hObject,'Value')
+    set(handles.Edit_SeedNumber, 'Enable', 'off')
+    handles.CertificationSettings.Run.RandomSeed = true;
+end
+guidata(hObject, handles);
+
+% --- Executes on button press in Radio_RandomSeedNo.
+function Radio_RandomSeedNo_Callback(hObject, eventdata, handles)
+if get(hObject,'Value')
+    set(handles.Edit_SeedNumber, 'Enable', 'on')
+    handles.CertificationSettings.Run.RandomSeed = false;
+end
+guidata(hObject, handles);

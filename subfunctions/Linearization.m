@@ -139,6 +139,7 @@ function Linearize_Callback(hObject, eventdata, handles)
 
 % Wind speed range
 WindSpeeds = str2double(get(handles.WindSpeed_From, 'String')):str2double(get(handles.WindSpeed_Step, 'String')):str2double(get(handles.WindSpeed_To, 'String'));
+TSim = str2double(get(handles.LinTime, 'String'));
 if sum(WindSpeeds) == 0 || isnan(sum(WindSpeeds))
     errordlg('Invalid wind speed range', 'Error')
 elseif min(WindSpeeds) < handles.Control.WindSpeed.Cutin || max(WindSpeeds) > handles.Control.WindSpeed.Cutout
@@ -231,7 +232,6 @@ Drivetrain.Generator.HSSInertia = 534.116 * (Prated/(5e6))^(5/3) * (12.1*97/Cont
 disp('Writing input files...')
 
 % Simulink settings
-TSim = 150;
 FAST_InputFileName = [pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'FAST.fst'];
 
 % Turbine input files
@@ -364,3 +364,14 @@ end
 
 % Update handles structure
 guidata(hObject, handles);
+
+
+
+function LinTime_Callback(hObject, eventdata, handles)
+
+
+% --- Executes during object creation, after setting all properties.
+function LinTime_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

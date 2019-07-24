@@ -182,6 +182,10 @@ if handles.Save
     end
     
     handles.Control.Pitch.Scheduled = get(handles.GainScheduled,'Value');
+    
+    % Do a check if the controller parameters make sense
+    assertControllerGains(handles)
+    
     varargout{1} = handles.Control;
 else
     varargout = handles.Input;
@@ -370,12 +374,6 @@ function PlotLPF_checkbox_Callback(hObject, eventdata, handles)
         EnableDisableButtons(handles, 'on')
     end
 
-    if AllControllersEnabled
-        set(handles.PlotLoopGain_checkbox, 'Enable', 'on');
-    else
-        set(handles.PlotLoopGain_checkbox, 'Enable', 'off');
-        set(handles.PlotLoopGain_checkbox, 'Value', 0);
-    end
     BodePlot(handles, false)
 
 function PlotPI_checkbox_Callback(hObject, eventdata, handles)
@@ -385,13 +383,7 @@ function PlotPI_checkbox_Callback(hObject, eventdata, handles)
     else
         EnableDisableButtons(handles, 'on')
     end
-
-    if AllControllersEnabled
-        set(handles.PlotLoopGain_checkbox, 'Enable', 'on');
-    else
-        set(handles.PlotLoopGain_checkbox, 'Enable', 'off');
-        set(handles.PlotLoopGain_checkbox, 'Value', 0);
-    end
+	
     BodePlot(handles, false)
 
 
@@ -403,12 +395,6 @@ function PlotNotch_checkbox_Callback(hObject, eventdata, handles)
         EnableDisableButtons(handles, 'on')
     end
 
-    if AllControllersEnabled
-        set(handles.PlotLoopGain_checkbox, 'Enable', 'on');
-    else
-        set(handles.PlotLoopGain_checkbox, 'Enable', 'off');
-        set(handles.PlotLoopGain_checkbox, 'Value', 0);
-    end
     BodePlot(handles, false)
 
 function PlotNom_checkbox_Callback(hObject, eventdata, handles)
@@ -419,12 +405,6 @@ function PlotNom_checkbox_Callback(hObject, eventdata, handles)
         EnableDisableButtons(handles, 'on')
     end
 
-    if AllControllersEnabled
-        set(handles.PlotLoopGain_checkbox, 'Enable', 'on');
-    else
-        set(handles.PlotLoopGain_checkbox, 'Enable', 'off');
-        set(handles.PlotLoopGain_checkbox, 'Value', 0);
-    end
     BodePlot(handles, false)
 
 function PlotLoopGain_checkbox_Callback(hObject, eventdata, handles)
@@ -439,7 +419,7 @@ function BodePlot(handles, undock)
     cla(handles.BodePhase_axes,'reset')
 
     % Evaluate state of buttons checked
-    [AllDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles);
+    [AllDisabled, ~] = CheckStateCheckboxes(handles);
     
     % Create transfer function of filters in series according to selection GUI
     Plant = tf(1,1)*ones(1,length(handles.SelectedListboxContents));
@@ -450,61 +430,11 @@ function BodePlot(handles, undock)
         Plant(1,i) = pi/30*handles.sysm{selIndex,1}(iGenSpeed,iBlPitchCPC);
     end
     
-    Controller = tf(1,1)*ones(1,length(handles.SelectedListboxContents));
-    if get(handles.PlotLPF_checkbox, 'Value')
-        if handles.Control.Pitch.Scheduled
-            for i = 1:length(handles.SelectedListboxContents)
-                selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Control.Pitch.ScheduledPitchAngles*180/pi);
-                if handles.Control.Pitch.LowPassOrder == 1
-                    Controller(1,i) = Controller(1,i)*tf(handles.Control.Pitch.LowPassCutOffFreqGS(selIndex),[1 handles.Control.Pitch.LowPassCutOffFreqGS(selIndex)]);
-                else
-                    Controller(1,i) = Controller(1,i)*tf(handles.Control.Pitch.LowPassCutOffFreqGS(selIndex)^2,[1 2/sqrt(2)*handles.Control.Pitch.LowPassCutOffFreqGS(selIndex) handles.Control.Pitch.LowPassCutOffFreqGS(selIndex)^2]);
-                end
-            end
-        else
-            if handles.Control.Pitch.LowPassOrder == 1
-                Controller(1,:) = Controller(1,:)*tf(handles.Control.Pitch.LowPassCutOffFreq,[1 handles.Control.Pitch.LowPassCutOffFreq]);
-            else
-                Controller(1,:) = Controller(1,:)*tf(handles.Control.Pitch.LowPassCutOffFreq^2,[1 2/sqrt(2)*handles.Control.Pitch.LowPassCutOffFreq handles.Control.Pitch.LowPassCutOffFreq^2]);
-            end
-        end
-    end
-    if get(handles.PlotPI_checkbox, 'Value')
-        if handles.Control.Pitch.Scheduled
-            for i = 1:length(handles.SelectedListboxContents)
-                selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Control.Pitch.ScheduledPitchAngles*180/pi);
-                if all([handles.Control.Pitch.KpGS(selIndex) handles.Control.Pitch.KiGS(selIndex)] == 0)
-                    Controller(1,i) = Controller(1,i);
-                else
-                    Controller(1,i) = Controller(1,i)*tf([handles.Control.Pitch.KpGS(selIndex) handles.Control.Pitch.KiGS(selIndex)], [1 0]);
-                end
-            end
-        else
-            if all([handles.Control.Pitch.Kp handles.Control.Pitch.Ki] == 0)
-                Controller(1,i) = Controller(1,i);
-            else
-                Controller(1,:) = Controller(1,:)*tf([handles.Control.Pitch.Kp handles.Control.Pitch.Ki], [1 0]);
-            end
-        end
-    end
-    if get(handles.PlotNotch_checkbox, 'Value')
-        if handles.Control.Pitch.Scheduled
-            for i = 1:length(handles.SelectedListboxContents)
-                selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Control.Pitch.ScheduledPitchAngles*180/pi);
-                if any([handles.Control.Pitch.Notch_beta1GS(selIndex) handles.Control.Pitch.Notch_beta2GS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)] == 0)
-                    Controller(1,i) = Controller(1,i);
-                else
-                    Controller(1,i) = Controller(1,i)*tf([1 2*handles.Control.Pitch.Notch_beta1GS(selIndex)*handles.Control.Pitch.Notch_wnGS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)^2], [1 2*handles.Control.Pitch.Notch_beta2GS(selIndex)*handles.Control.Pitch.Notch_wnGS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)^2]);
-                end
-            end
-        else
-            if any([handles.Control.Pitch.Notch_beta1 handles.Control.Pitch.Notch_beta2 handles.Control.Pitch.Notch_wn] == 0)
-                Controller(1,:) = Controller(1,:);
-            else
-                Controller(1,:) = Controller(1,:)*tf([1 2*handles.Control.Pitch.Notch_beta1*handles.Control.Pitch.Notch_wn handles.Control.Pitch.Notch_wn^2], [1 2*handles.Control.Pitch.Notch_beta2*handles.Control.Pitch.Notch_wn handles.Control.Pitch.Notch_wn^2]);
-            end
-        end
-    end
+    % Synthesize controller for plotting the loopgain
+    ControllerLG = calculateController(handles, true);
+    
+    % Synthesize controller for plotting the controller only
+    Controller = calculateController(handles, false);
 
     % Evaluate the user choise to only see the controller, or to show the
     % loop-gain
@@ -512,14 +442,14 @@ function BodePlot(handles, undock)
     if get(handles.PlotLoopGain_checkbox, 'Value')
         for i = 1:length(handles.SelectedListboxContents)
             selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Lin.Pitch*180/pi);
-            LoopGain(1,i) = series(Controller(:,i), Plant(:,i));
+            LoopGain(1,i) = series(ControllerLG(:,i), Plant(:,i));
         end
     end
 
     w = logspace(-2,2,1000);
-    ControllerFRF = freqresp(Controller, w);
-    ControllerMagResponse = mag2db(squeeze(abs(ControllerFRF)));
-    ControllerPhaseResponse = angle(squeeze(ControllerFRF))*180/pi;
+    Controller_FRF = freqresp(Controller, w);
+    Controller_MagResponse = mag2db(squeeze(abs(Controller_FRF)));
+    Controller_PhaseResponse = angle(squeeze(Controller_FRF))*180/pi;
     if get(handles.PlotLoopGain_checkbox, 'Value')
         LoopGainFRF = freqresp(LoopGain, w);
         LoopGainMagResponse = mag2db(squeeze(abs(LoopGainFRF)));
@@ -542,7 +472,7 @@ function BodePlot(handles, undock)
         semilogx(w, PlantMagResponse), hold on
     end
     if not(AllDisabled)
-        semilogx(w, ControllerMagResponse, '--'), hold on
+        semilogx(w, Controller_MagResponse, '--'), hold on
     end
     if get(handles.PlotLoopGain_checkbox, 'Value'), hold on
         semilogx(w, LoopGainMagResponse);
@@ -550,6 +480,7 @@ function BodePlot(handles, undock)
     semilogx(w, zeros(1,length(w)), 'LineStyle', '--', 'Color', 'k', 'LineWidth', 0.5)
     xticklabels([])
     ylabel('Magnitude [dB]')
+    set(gca, 'XScale', 'log')
     grid on
     
     if undock
@@ -561,13 +492,14 @@ function BodePlot(handles, undock)
         semilogx(w, PlantPhaseResponse), hold on
     end
     if not(AllDisabled)
-        semilogx(w, ControllerPhaseResponse, '--'), hold on
+        semilogx(w, Controller_PhaseResponse, '--'), hold on
     end
     if get(handles.PlotLoopGain_checkbox, 'Value')
         semilogx(w, LoopGainPhaseResponse), hold on
     end
     xlabel('Frequency [rad/s]')
     ylabel('Phase [deg]')
+    set(gca, 'XScale', 'log')
     grid on
 
 % --- Executes on button press in LoadLinMat_pushbutton.
@@ -654,6 +586,7 @@ function EnableDisableCheckBoxes(handles, state)
     set(handles.PlotPI_checkbox, 'Enable', state)
     set(handles.PlotNotch_checkbox, 'Enable', state)
     set(handles.PlotNom_checkbox, 'Enable', state)
+    set(handles.PlotLoopGain_checkbox, 'Enable', state)
     
 function EnableDisableButtons(handles, state)
     set(handles.UndockBode_pushbutton, 'Enable', state)
@@ -667,6 +600,63 @@ function [AllDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles)
     
     AllDisabled = all(checkBox(1:4) == 0);
     AllControllersEnabled = all(checkBox(1:3) == 1);
+    
+function Controller = calculateController(handles, LoopGainCheckbox)
+    Controller = tf(1,1)*ones(1,length(handles.SelectedListboxContents));
+    if get(handles.PlotLPF_checkbox, 'Value') || LoopGainCheckbox
+        if handles.Control.Pitch.Scheduled
+            for i = 1:length(handles.SelectedListboxContents)
+                selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Control.Pitch.ScheduledPitchAngles*180/pi);
+                if handles.Control.Pitch.LowPassOrder == 1
+                    Controller(1,i) = Controller(1,i)*tf(handles.Control.Pitch.LowPassCutOffFreqGS(selIndex),[1 handles.Control.Pitch.LowPassCutOffFreqGS(selIndex)]);
+                else
+                    Controller(1,i) = Controller(1,i)*tf(handles.Control.Pitch.LowPassCutOffFreqGS(selIndex)^2,[1 2/sqrt(2)*handles.Control.Pitch.LowPassCutOffFreqGS(selIndex) handles.Control.Pitch.LowPassCutOffFreqGS(selIndex)^2]);
+                end
+            end
+        else
+            if handles.Control.Pitch.LowPassOrder == 1
+                Controller(1,:) = Controller(1,:)*tf(handles.Control.Pitch.LowPassCutOffFreq,[1 handles.Control.Pitch.LowPassCutOffFreq]);
+            else
+                Controller(1,:) = Controller(1,:)*tf(handles.Control.Pitch.LowPassCutOffFreq^2,[1 2/sqrt(2)*handles.Control.Pitch.LowPassCutOffFreq handles.Control.Pitch.LowPassCutOffFreq^2]);
+            end
+        end
+    end
+    if get(handles.PlotPI_checkbox, 'Value') || LoopGainCheckbox
+        if handles.Control.Pitch.Scheduled
+            for i = 1:length(handles.SelectedListboxContents)
+                selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Control.Pitch.ScheduledPitchAngles*180/pi);
+                if all([handles.Control.Pitch.KpGS(selIndex) handles.Control.Pitch.KiGS(selIndex)] == 0)
+                    Controller(1,i) = Controller(1,i);
+                else
+                    Controller(1,i) = Controller(1,i)*tf([handles.Control.Pitch.KpGS(selIndex) handles.Control.Pitch.KiGS(selIndex)], [1 0]);
+                end
+            end
+        else
+            if all([handles.Control.Pitch.Kp handles.Control.Pitch.Ki] == 0)
+                Controller(1,i) = Controller(1,i);
+            else
+                Controller(1,:) = Controller(1,:)*tf([handles.Control.Pitch.Kp handles.Control.Pitch.Ki], [1 0]);
+            end
+        end
+    end
+    if get(handles.PlotNotch_checkbox, 'Value') || LoopGainCheckbox
+        if handles.Control.Pitch.Scheduled
+            for i = 1:length(handles.SelectedListboxContents)
+                selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Control.Pitch.ScheduledPitchAngles*180/pi);
+                if any([handles.Control.Pitch.Notch_beta1GS(selIndex) handles.Control.Pitch.Notch_beta2GS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)] == 0)
+                    Controller(1,i) = Controller(1,i);
+                else
+                    Controller(1,i) = Controller(1,i)*tf([1 2*handles.Control.Pitch.Notch_beta1GS(selIndex)*handles.Control.Pitch.Notch_wnGS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)^2], [1 2*handles.Control.Pitch.Notch_beta2GS(selIndex)*handles.Control.Pitch.Notch_wnGS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)^2]);
+                end
+            end
+        else
+            if any([handles.Control.Pitch.Notch_beta1 handles.Control.Pitch.Notch_beta2 handles.Control.Pitch.Notch_wn] == 0)
+                Controller(1,:) = Controller(1,:);
+            else
+                Controller(1,:) = Controller(1,:)*tf([1 2*handles.Control.Pitch.Notch_beta1*handles.Control.Pitch.Notch_wn handles.Control.Pitch.Notch_wn^2], [1 2*handles.Control.Pitch.Notch_beta2*handles.Control.Pitch.Notch_wn handles.Control.Pitch.Notch_wn^2]);
+            end
+        end
+    end
     
 % --- Executes on button press in PlotReset_pushbutton.
 function PlotReset_pushbutton_Callback(hObject, eventdata, handles)
@@ -682,12 +672,6 @@ guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function LPFCutOff_text_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to LPFCutOff_text (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -695,10 +679,6 @@ end
 
 % --- Executes during object creation, after setting all properties.
 function Table_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to Table (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
 
 % --- Executes on button press in SecondOrderLPF_radio.
 function SecondOrderLPF_radio_Callback(hObject, eventdata, handles)
@@ -789,6 +769,33 @@ function handles = UpdateHandlesWithTableData(handles)
     handles.Control.Pitch.LowPassCutOffFreqGS = LowPassCutOffFreqGS(~isnan(LowPassCutOffFreqGS));
 
 
+function assertControllerGains(handles)
+    if get(handles.GainScheduled,'Value')
+        if any(handles.Control.Pitch.KpGS > 0) || any(handles.Control.Pitch.KiGS > 0)
+            questdlg('Warning: Proportional and integral gains must all be negative','Warning','OK','OK');
+        end
+    
+        if any(handles.Control.Pitch.Notch_beta1GS < 0) || any(handles.Control.Pitch.Notch_beta2GS < 0) || any(handles.Control.Pitch.Notch_wnGS < 0)
+            questdlg('Warning: Notch parameters must all be positive','Warning','OK','OK');
+        end
+    
+        if any(handles.Control.Pitch.LowPassCutOffFreqGS < 0)
+            questdlg('Warning: Low-pass filter cut-off frequencies must all be positive','Warning','OK','OK');
+        end
+    else
+        if handles.Control.Pitch.Kp > 0 || handles.Control.Pitch.Ki > 0
+            questdlg('Warning: Proportional and integral gains must be negative','Warning','OK','OK');
+        end
+        
+        if any(handles.Control.Pitch.Notch_beta1 < 0) || any(handles.Control.Pitch.Notch_beta2 < 0) || any(handles.Control.Pitch.Notch_wn < 0)
+            questdlg('Warning: Notch parameters must be positive','Warning','OK','OK');
+        end
+    
+        if any(handles.Control.Pitch.LowPassCutOffFreq < 0)
+            questdlg('Warning: Low-pass filter cut-off frequency must be positive','Warning','OK','OK');
+        end
+    end
+    
 % --- Executes when entered data in editable cell(s) in Table.
 function Table_CellEditCallback(hObject, eventdata, handles)
 handles = UpdateHandlesWithTableData(handles);
@@ -835,12 +842,6 @@ end
 
 % --- Executes on slider movement.
 function Window_slider_Callback(hObject, eventdata, handles)
-% hObject    handle to Window_slider (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 xpos = get(hObject, 'Value');
 sliderpos = get(hObject, 'Position');
 windowpos = get(handles.Window_group, 'Position');
@@ -849,11 +850,6 @@ set(handles.Window_group, 'Position', windowpos);
 
 % --- Executes during object creation, after setting all properties.
 function Window_slider_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to Window_slider (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
