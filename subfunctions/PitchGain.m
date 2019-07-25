@@ -70,6 +70,7 @@ set(handles.Constant_Kp_textbox, 'String', num2str(handles.Control.Pitch.Kp));
 set(handles.Constant_Notch_B1_textbox, 'String', num2str(handles.Control.Pitch.Notch_beta1));
 set(handles.Constant_Notch_B2_textbox, 'String', num2str(handles.Control.Pitch.Notch_beta2));
 set(handles.Constant_Notch_wn_textbox, 'String', num2str(handles.Control.Pitch.Notch_wn));
+set(handles.ExportPlotData_pushbutton, 'Enable', 'off')
 
 set(handles.TableSize_textbox, 'String', length(handles.Control.Pitch.KpGS));
 set(handles.TableSize_slider, 'Value', length(handles.Control.Pitch.KpGS));
@@ -374,7 +375,7 @@ function PlotLPF_checkbox_Callback(hObject, eventdata, handles)
         EnableDisableButtons(handles, 'on')
     end
 
-    BodePlot(handles, false)
+    BodePlot(handles, false, false)
 
 function PlotPI_checkbox_Callback(hObject, eventdata, handles)
     [AllControllersDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles);
@@ -384,7 +385,7 @@ function PlotPI_checkbox_Callback(hObject, eventdata, handles)
         EnableDisableButtons(handles, 'on')
     end
 	
-    BodePlot(handles, false)
+    BodePlot(handles, false, false)
 
 
 function PlotNotch_checkbox_Callback(hObject, eventdata, handles)
@@ -395,7 +396,7 @@ function PlotNotch_checkbox_Callback(hObject, eventdata, handles)
         EnableDisableButtons(handles, 'on')
     end
 
-    BodePlot(handles, false)
+    BodePlot(handles, false, false)
 
 function PlotNom_checkbox_Callback(hObject, eventdata, handles)
     [AllControllersDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles);
@@ -405,21 +406,29 @@ function PlotNom_checkbox_Callback(hObject, eventdata, handles)
         EnableDisableButtons(handles, 'on')
     end
 
-    BodePlot(handles, false)
+    BodePlot(handles, false, false)
 
 function PlotLoopGain_checkbox_Callback(hObject, eventdata, handles)
-	BodePlot(handles, false)
+	BodePlot(handles, false, false)
 
 %% --- Executes on button presses
 function UndockBode_pushbutton_Callback(hObject, eventdata, handles)
-    BodePlot(handles, true)
+    BodePlot(handles, true, false)
 
-function BodePlot(handles, undock)
+function BodePlot(handles, undock, exportData)
    	cla(handles.BodeMag_axes,'reset')
     cla(handles.BodePhase_axes,'reset')
+    
+    % Create vector of plot colors
+    plotCol = linspace(0.8, 0, length(handles.SelectedListboxContents));
+    plotLineStyle = {'-', '--', '-'};
+    plotLineWidth = [1, 1, 2];
 
     % Evaluate state of buttons checked
     [AllDisabled, ~] = CheckStateCheckboxes(handles);
+    
+    % Enable export data button
+    set(handles.ExportPlotData_pushbutton, 'Enable', 'on')
     
     % Create transfer function of filters in series according to selection GUI
     Plant = tf(1,1)*ones(1,length(handles.SelectedListboxContents));
@@ -439,26 +448,42 @@ function BodePlot(handles, undock)
     % Evaluate the user choise to only see the controller, or to show the
     % loop-gain
     LoopGain = tf(1,1)*ones(1,length(handles.SelectedListboxContents));
-    if get(handles.PlotLoopGain_checkbox, 'Value')
-        for i = 1:length(handles.SelectedListboxContents)
-            selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Lin.Pitch*180/pi);
-            LoopGain(1,i) = series(ControllerLG(:,i), Plant(:,i));
-        end
+    for i = 1:length(handles.SelectedListboxContents)
+        LoopGain(1,i) = series(ControllerLG(:,i), Plant(:,i));
     end
 
     w = logspace(-2,2,1000);
     Controller_FRF = freqresp(Controller, w);
-    Controller_MagResponse = mag2db(squeeze(abs(Controller_FRF)));
-    Controller_PhaseResponse = angle(squeeze(Controller_FRF))*180/pi;
-    if get(handles.PlotLoopGain_checkbox, 'Value')
-        LoopGainFRF = freqresp(LoopGain, w);
-        LoopGainMagResponse = mag2db(squeeze(abs(LoopGainFRF)));
-        LoopGainPhaseResponse = angle(squeeze(LoopGainFRF))*180/pi;
+    ControllerLG_FRF = freqresp(ControllerLG, w);
+    Controller_MagResponse = mag2db(squeeze(abs(Controller_FRF)))';
+    Controller_PhaseResponse = angle(squeeze(Controller_FRF))'*180/pi;
+
+    LoopGainFRF = freqresp(LoopGain, w);
+    LoopGainMagResponse = mag2db(squeeze(abs(LoopGainFRF)))';
+    LoopGainPhaseResponse = angle(squeeze(LoopGainFRF))'*180/pi;
+
+    PlantFRF = freqresp(Plant, w);
+    PlantMagResponse = mag2db(squeeze(abs(PlantFRF)))';
+    PlantPhaseResponse = angle(squeeze(PlantFRF))'*180/pi;
+    
+    % Ensure the data is always saved column-wise for single line plots
+    if size(Controller_MagResponse, 1) == 1
+        Controller_MagResponse = Controller_MagResponse(:);
+        Controller_PhaseResponse = Controller_PhaseResponse(:);
+        LoopGainMagResponse = LoopGainMagResponse(:);
+        LoopGainPhaseResponse = LoopGainPhaseResponse(:);
+        PlantMagResponse = PlantMagResponse(:);
+        PlantPhaseResponse = PlantPhaseResponse(:);
     end
-    if get(handles.PlotNom_checkbox, 'Value')
-        PlantFRF = freqresp(Plant, w);
-        PlantMagResponse = mag2db(squeeze(abs(PlantFRF)));
-        PlantPhaseResponse = angle(squeeze(PlantFRF))*180/pi;
+    
+    if exportData
+        frd_Plant = frd(PlantFRF, w);
+        frd_Controller = frd(ControllerLG_FRF, w);
+        frd_LoopGain = frd(LoopGainFRF, w);
+        
+        PitchAngles = str2double(handles.SelectedListboxContents);
+        
+        uisave({'frd_Plant', 'frd_Controller', 'frd_LoopGain', 'PitchAngles'}, 'ExportPlotData')
     end
 
     if undock
@@ -468,34 +493,44 @@ function BodePlot(handles, undock)
     else
         axes(handles.BodeMag_axes);
     end
-    if get(handles.PlotNom_checkbox, 'Value')
-        semilogx(w, PlantMagResponse), hold on
-    end
-    if not(AllDisabled)
-        semilogx(w, Controller_MagResponse, '--'), hold on
-    end
-    if get(handles.PlotLoopGain_checkbox, 'Value'), hold on
-        semilogx(w, LoopGainMagResponse);
+    
+    for i = 1:length(handles.SelectedListboxContents)
+        if get(handles.PlotNom_checkbox, 'Value')
+            h(i) = semilogx(w, PlantMagResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{1}, 'LineWidth', plotLineWidth(1));
+            hold on
+        end
+        if not(AllDisabled)
+            h(i) = semilogx(w, Controller_MagResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{2}, 'LineWidth', plotLineWidth(2));
+            hold on
+        end
+        if get(handles.PlotLoopGain_checkbox, 'Value'), hold on
+            h(i) = semilogx(w, LoopGainMagResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{3}, 'LineWidth', plotLineWidth(3));
+        end
     end
     semilogx(w, zeros(1,length(w)), 'LineStyle', '--', 'Color', 'k', 'LineWidth', 0.5)
     xticklabels([])
     ylabel('Magnitude [dB]')
     set(gca, 'XScale', 'log')
     grid on
+    if exist('h', 'var')
+        legend(h, handles.SelectedListboxContents, 'Location', 'SouthWest')
+    end
     
     if undock
         subplot(212)
     else
         axes(handles.BodePhase_axes);
     end
-    if get(handles.PlotNom_checkbox, 'Value')
-        semilogx(w, PlantPhaseResponse), hold on
-    end
-    if not(AllDisabled)
-        semilogx(w, Controller_PhaseResponse, '--'), hold on
-    end
-    if get(handles.PlotLoopGain_checkbox, 'Value')
-        semilogx(w, LoopGainPhaseResponse), hold on
+    for i = 1:length(handles.SelectedListboxContents)
+        if get(handles.PlotNom_checkbox, 'Value')
+            semilogx(w, PlantPhaseResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{1}, 'LineWidth', plotLineWidth(1)), hold on
+        end
+        if not(AllDisabled)
+            semilogx(w, Controller_PhaseResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{2}, 'LineWidth', plotLineWidth(2)), hold on
+        end
+        if get(handles.PlotLoopGain_checkbox, 'Value')
+            semilogx(w, LoopGainPhaseResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{3}, 'LineWidth', plotLineWidth(3)), hold on
+        end
     end
     xlabel('Frequency [rad/s]')
     ylabel('Phase [deg]')
@@ -853,3 +888,8 @@ function Window_slider_CreateFcn(hObject, eventdata, handles)
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
+
+
+% --- Executes on button press in ExportPlotData_pushbutton.
+function ExportPlotData_pushbutton_Callback(hObject, eventdata, handles)
+    BodePlot(handles, false, true)
