@@ -81,10 +81,10 @@ fprintf(fid, '      %5.4f   SpdGenOn     - Generator speed to turn on the genera
 fprintf(fid, '      %5.1f   TimGenOn     - Time to turn on the generator for a startup (s) [used only when GenTiStr=True]\n', TimGenOn);
 fprintf(fid, '      %5.1f   TimGenOf     - Time to turn off the generator (s) [used only when GenTiStp=True]\n', TimGenOf);
 fprintf(fid, '---------------------- SIMPLE VARIABLE-SPEED TORQUE CONTROL --------------------\n');
-fprintf(fid, '      %5.4f   VS_RtGnSp    - Rated generator speed for simple variable-speed generator control (HSS side) (rpm) [used only when VSContrl=1]\n', VS_RtGnSp);
-fprintf(fid, '      %5.4f   VS_RtTq      - Rated generator torque/constant generator torque in Region 3 for simple variable-speed generator control (HSS side) (N-m) [used only when VSContrl=1]\n', VS_RtTq);
-fprintf(fid, '      %5.4f   VS_Rgn2K     - Generator torque constant in Region 2 for simple variable-speed generator control (HSS side) (N-m/rpm^2) [used only when VSContrl=1]\n', VS_Rgn2K);
-fprintf(fid, '      %5.4f   VS_SlPc      - Rated generator slip percentage in Region 2 1/2 for simple variable-speed generator control (%%) [used only when VSContrl=1]\n', VS_SlPc);
+fprintf(fid, '      %7.6f   VS_RtGnSp    - Rated generator speed for simple variable-speed generator control (HSS side) (rpm) [used only when VSContrl=1]\n', VS_RtGnSp);
+fprintf(fid, '      %7.6f   VS_RtTq      - Rated generator torque/constant generator torque in Region 3 for simple variable-speed generator control (HSS side) (N-m) [used only when VSContrl=1]\n', VS_RtTq);
+fprintf(fid, '      %7.6f   VS_Rgn2K     - Generator torque constant in Region 2 for simple variable-speed generator control (HSS side) (N-m/rpm^2) [used only when VSContrl=1]\n', VS_Rgn2K);
+fprintf(fid, '      %7.6f   VS_SlPc      - Rated generator slip percentage in Region 2 1/2 for simple variable-speed generator control (%%) [used only when VSContrl=1]\n', VS_SlPc);
 fprintf(fid, '---------------------- SIMPLE INDUCTION GENERATOR ------------------------------\n');
 fprintf(fid, '    9999.9    SIG_SlPc     - Rated generator slip percentage (%%) [used only when VSContrl=0 and GenModel=1]\n');
 fprintf(fid, '    9999.9    SIG_SySp     - Synchronous (zero-torque) generator speed (rpm) [used only when VSContrl=0 and GenModel=1]\n');
