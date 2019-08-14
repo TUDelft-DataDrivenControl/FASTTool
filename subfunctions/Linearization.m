@@ -340,7 +340,6 @@ end
 
 % --- Executes on button press in LinearizeAboveRatedOnly_checkbox.
 function LinearizeAboveRatedOnly_checkbox_Callback(hObject, eventdata, handles)
-% Hint: get(hObject,'Value') returns toggle state of LinearizeAboveRatedOnly_checkbox
 if get(hObject,'Value') 
     % Set above-rated wind speed region
     SetFullLoad_Callback(hObject, eventdata, handles)

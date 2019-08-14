@@ -13,16 +13,15 @@ VS_SlPc = 1e-6;
 VS_RtTq =  Control.Torque.Demanded;
 
 if strcmpi(mode,'Linearize')
-    VSContrl = 1;
     PCMode = 0;
+    VSContrl = 1;
     HSSBrMode = 0;
     
     VS_RtGnSp = Control.Torque.SpeedC;
-
     VS_Rgn2K = (pi/30)^2 * Control.Torque.OptGain;
 elseif strcmpi(mode,'LinearizeAboveRated')
-    VSContrl = 1;
     PCMode = 0;
+    VSContrl = 1;
     HSSBrMode = 0;
     
     VS_RtGnSp = 1e-6;
