@@ -368,8 +368,8 @@ end
 
 %% --- Executes on button press in checkboxes.
 function PlotLPF_checkbox_Callback(hObject, eventdata, handles)
-    [AllControllersDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles);
-    if AllControllersDisabled
+    [AllDisabled, ~] = CheckStateCheckboxes(handles);
+    if AllDisabled
         EnableDisableButtons(handles, 'off')
     else
         EnableDisableButtons(handles, 'on')
@@ -378,8 +378,8 @@ function PlotLPF_checkbox_Callback(hObject, eventdata, handles)
     BodePlot(handles, false, false)
 
 function PlotPI_checkbox_Callback(hObject, eventdata, handles)
-    [AllControllersDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles);
-    if AllControllersDisabled
+    [AllDisabled, ~] = CheckStateCheckboxes(handles);
+    if AllDisabled
         EnableDisableButtons(handles, 'off')
     else
         EnableDisableButtons(handles, 'on')
@@ -389,8 +389,8 @@ function PlotPI_checkbox_Callback(hObject, eventdata, handles)
 
 
 function PlotNotch_checkbox_Callback(hObject, eventdata, handles)
-    [AllControllersDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles);
-    if AllControllersDisabled
+    [AllDisabled, ~] = CheckStateCheckboxes(handles);
+    if AllDisabled
         EnableDisableButtons(handles, 'off')
     else
         EnableDisableButtons(handles, 'on')
@@ -399,8 +399,8 @@ function PlotNotch_checkbox_Callback(hObject, eventdata, handles)
     BodePlot(handles, false, false)
 
 function PlotNom_checkbox_Callback(hObject, eventdata, handles)
-    [AllControllersDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles);
-    if AllControllersDisabled
+    [AllDisabled, ~] = CheckStateCheckboxes(handles);
+    if AllDisabled
         EnableDisableButtons(handles, 'off')
     else
         EnableDisableButtons(handles, 'on')
@@ -409,6 +409,13 @@ function PlotNom_checkbox_Callback(hObject, eventdata, handles)
     BodePlot(handles, false, false)
 
 function PlotLoopGain_checkbox_Callback(hObject, eventdata, handles)
+    [AllDisabled, ~] = CheckStateCheckboxes(handles);
+    if AllDisabled
+        EnableDisableButtons(handles, 'off')
+    else
+        EnableDisableButtons(handles, 'on')
+    end
+    
 	BodePlot(handles, false, false)
 
 %% --- Executes on button presses
@@ -426,9 +433,6 @@ function BodePlot(handles, undock, exportData)
 
     % Evaluate state of buttons checked
     [AllDisabled, ~] = CheckStateCheckboxes(handles);
-    
-    % Enable export data button
-    set(handles.ExportPlotData_pushbutton, 'Enable', 'on')
     
     % Create transfer function of filters in series according to selection GUI
     Plant = tf(1,1)*ones(1,length(handles.SelectedListboxContents));
@@ -629,14 +633,16 @@ function EnableDisableCheckBoxes(handles, state)
     
 function EnableDisableButtons(handles, state)
     set(handles.UndockBode_pushbutton, 'Enable', state)
+    set(handles.ExportPlotData_pushbutton, 'Enable', state)
     
 function [AllDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles)
     checkBox(1) = get(handles.PlotLPF_checkbox, 'Value');
     checkBox(2) = get(handles.PlotPI_checkbox, 'Value');
     checkBox(3) = get(handles.PlotNotch_checkbox, 'Value');
     checkBox(4) = get(handles.PlotNom_checkbox, 'Value');
+    checkBox(5) = get(handles.PlotLoopGain_checkbox, 'Value');
     
-    AllDisabled = all(checkBox(1:4) == 0);
+    AllDisabled = all(checkBox(1:5) == 0);
     AllControllersEnabled = all(checkBox(1:3) == 1);
     
 function Controller = calculateController(handles, LoopGainCheckbox)
@@ -886,7 +892,6 @@ function Window_slider_CreateFcn(hObject, eventdata, handles)
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
-
 
 % --- Executes on button press in ExportPlotData_pushbutton.
 function ExportPlotData_pushbutton_Callback(hObject, eventdata, handles)
