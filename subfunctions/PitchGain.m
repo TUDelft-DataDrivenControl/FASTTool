@@ -557,7 +557,11 @@ function LoadLinMat_pushbutton_Callback(hObject, eventdata, handles)
                 set(handles.LinFileCheck_text, 'ForegroundColor', [0.0 1.0 0.0])
 
                 % Show the above-rated linear model pitch angles in listbox
-                LinListBoxItemsIndex = find([0 (diff(Lin.Pitch) > 0)]);
+                if length(Lin.Pitch) == 1
+                    LinListBoxItemsIndex = 1;
+                else
+                    LinListBoxItemsIndex = find([diff(Lin.Pitch(1:2)) (diff(Lin.Pitch) > 0)]);
+                end
                 handles.FirstAboveRatedLinModelIndex = LinListBoxItemsIndex(1);
                 set(handles.LinWindSpeed_listbox, 'string', {Lin.Pitch(LinListBoxItemsIndex)*180/pi})
 

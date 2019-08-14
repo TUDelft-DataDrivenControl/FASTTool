@@ -4,6 +4,7 @@ Output
 slprj
 *.autosave
 ownScripts/
+NREL5MW_linearised.mat
 NREL5MW_tuned.mat
 *.asv
 *.slxc

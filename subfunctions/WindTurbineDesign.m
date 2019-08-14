@@ -116,12 +116,20 @@ info = [...
     'Designed for FAST v8.16', ...
     '\n', ...
     'Course instructor: Michiel Zaaijer (M.B.Zaayer@tudelft.nl) \n', ...
-    'GUI created by: René Bos (R.Bos-1@tudelft.nl) and Michiel Zaaijer \n', ...
+    'GUI created by: Rene Bos and Michiel Zaaijer \n', ...
     'Simulink integration: Sebastiaan Mulders (S.P.Mulders@tudelft.nl) and Jan-Willem van Wingerden (J.W.vanWingerden@tudelft.nl)'];
 helpdlg(sprintf(info), 'Info')
 
 %% Open turbine
 function OpenProject_Callback(hObject, eventdata, handles)
+if ~strcmpi(handles.WindTurbineDesign.Name,'FASTTool')
+    button = questdlg('Save changes?');
+    if strcmp(button, 'Yes')
+        SaveProject_Callback(hObject, eventdata, handles);
+    elseif strcmp(button, 'Cancel')
+        return
+    end
+end
 
 % Dialogue box
 [FileName,PathName] = uigetfile('*.mat', 'Open turbine');
@@ -187,6 +195,10 @@ function SaveProject_Callback(hObject, eventdata, handles)
 % Dialogue box
 [FileName,PathName] = uiputfile('*.mat', 'Save turbine');
 if FileName
+    
+    % Set window title
+    Title = ['FASTTool - ', FileName];
+    set(handles.WindTurbineDesign, 'Name', Title)
     
     % Get turbine geometry from handles
     Blade = handles.Blade;

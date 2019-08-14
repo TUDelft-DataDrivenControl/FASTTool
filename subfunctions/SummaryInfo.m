@@ -66,40 +66,64 @@ else
     end
 end
 
-% Find maximum power coefficient and corresponding tip speed ratio
+% Find maximum power coefficient and corresponding tip speed ratio with
+% golden section search
+% https://en.wikipedia.org/wiki/Golden-section_search)
 disp('Searching for maximum power coefficient and optimal tip speed ratio...')
-TSR1 = 1;
-TSR2 = 20;
-[~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, TSR1);
-CP1 = TSR1*CQr;
-[~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, TSR2);
-CP2 = TSR2*CQr;
+TSR_a = 1;
+TSR_b = 20;
 
 success = false;
+invphi = (sqrt(5)-1)/2;
+invphi2 = (3-sqrt(5))/2;
+range = TSR_b - TSR_a;
+TSR_c = TSR_a + invphi2 * range;
+TSR_d = TSR_a + invphi * range;
+[~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, TSR_c);
+CP_c = TSR_c*CQr;
+[~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, TSR_d);
+CP_d = TSR_d*CQr;
 for iter = 1:100
-    TSR_new = (TSR1 + TSR2)/2;
-    [~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, TSR_new);
-    CP_new = TSR_new*CQr;
-    if abs((TSR2 - TSR_new)/TSR2) < 0.005
+
+    if CP_c > CP_d
+        TSR_b = TSR_d;
+        TSR_d = TSR_c;
+        CP_d = CP_c;
+        range = invphi * range;
+        TSR_c = TSR_a + invphi2 * range;
+        [~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, TSR_c);
+        CP_c = TSR_c*CQr;
+    else
+        TSR_a = TSR_c;
+        TSR_c = TSR_d;
+        CP_c = CP_d;
+        range = invphi * range;
+        TSR_d = TSR_a + invphi * range;
+        [~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, TSR_d);
+        CP_d = TSR_d*CQr;
+    end
+    
+    if (2 * range / (TSR_b + TSR_a)) < 0.001
         success = true;
         break
     end
-    if CP1 < CP2
-       TSR1 = TSR_new;
-       CP1 = CP_new;
-    else
-       TSR2 = TSR_new;
-       CP2 = CP_new;
-    end
 end
-CPmax = CP_new;
-if ((TSR_new - 1) / 1.01) < 0.005
+
+if CP_c > CP_d
+    TSR_new = (TSR_a + TSR_d) / 2;
+else
+    TSR_new = (TSR_c + TSR_b) / 2;
+end
+[~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, TSR_new);
+CPmax = TSR_new*CQr;
+if ((TSR_new - 1) / 1.01) < 0.001
     OptimalTSR = '< 1';
-elseif ((20 - TSR_new) / 20) < 0.005
+elseif ((20 - TSR_new) / 20) < 0.001
     OptimalTSR = '> 20';
 else
     OptimalTSR = num2str(TSR_new, '%2.1f');
 end
+
 if ~success
     warning('Tolerance not met during iteration of axial induction factor')
 end

@@ -153,17 +153,6 @@ for j = 1:length(buttons)
 end
 pause(0.1)
 
-if handles.Drivetrain.Generator.HSSInertia == 534.116
-    button = questdlg('Warning: Generator inertia must be large enough','Warning','Continue','Cancel','Continue');
-    if ~strcmp(button, 'Continue')
-        % Enable window
-        for j = 1:length(buttons)
-            set(buttons(j), 'Enable', 'on');
-        end
-        return
-    end
-end
-
 LinAmount = str2double(get(handles.LinAmount, 'String'));
 LinRotations = str2double(get(handles.LinRotations, 'String'));
 LinMode = handles.LinearizationMode;

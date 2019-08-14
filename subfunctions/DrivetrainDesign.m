@@ -61,6 +61,15 @@ end
     
 %% Save button
 function Apply_Callback(hObject, eventdata, handles)
+% Give warning when generator inertia has not yet been updated to be
+% consistent with gear ratio
+if handles.Drivetrain.Generator.HSSInertia == 534.116 && handles.Drivetrain.Gearbox.Ratio < 97
+    button = questdlg('Warning: Update generator inertia when reducing gear ratio to avoid unrealistic behaviour','Warning', 'Continue','Cancel','Continue');
+    if ~strcmp(button, 'Continue')
+        return
+    end
+end
+
 handles.Save = true;
 guidata(hObject, handles);
 uiresume(handles.DrivetrainDesign);
@@ -128,8 +137,8 @@ end
 
 %% Gearbox ratio - text box
 function Gearbox_Ratio_textbox_Callback(hObject, eventdata, handles)
-if str2double(get(hObject,'String')) < 0
-    set(hObject, 'String', '0')
+if str2double(get(hObject,'String')) < 1
+    set(hObject, 'String', '1')
 elseif isnan(str2double(get(hObject,'String')))
     set(hObject, 'String', num2str(handles.Drivetrain.Gearbox.Ratio))
 end

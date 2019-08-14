@@ -53,7 +53,7 @@ sigmar = Blade.Number*Blade.Chord(k)/(2*pi*Blade.Radius(k));
 a_old = 0;
 success = false;
 for iter = 1:100
-    % Inflow angleclose all force
+    % Inflow angle
     phi = atan((1-a)/((1+a_old)*lambdar));
 
     % Tip loss correction
