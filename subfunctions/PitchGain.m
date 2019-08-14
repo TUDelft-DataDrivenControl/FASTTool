@@ -629,7 +629,6 @@ function EnableDisableCheckBoxes(handles, state)
     
 function EnableDisableButtons(handles, state)
     set(handles.UndockBode_pushbutton, 'Enable', state)
-    set(handles.PlotReset_pushbutton, 'Enable', state)
     
 function [AllDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles)
     checkBox(1) = get(handles.PlotLPF_checkbox, 'Value');
@@ -697,11 +696,6 @@ function Controller = calculateController(handles, LoopGainCheckbox)
         end
     end
     
-% --- Executes on button press in PlotReset_pushbutton.
-function PlotReset_pushbutton_Callback(hObject, eventdata, handles)
-    cla(handles.BodeMag_axes,'reset')
-    cla(handles.BodePhase_axes,'reset')
-
 function LPFCutOff_text_Callback(hObject, eventdata, handles)
 if isnan(str2double(get(hObject,'String')))
     set(hObject, 'String', num2str(handles.Control.Pitch.LowPassCutOffFreq))
