@@ -131,7 +131,7 @@ if ~isempty(Pitchi)
     
     for i = 1:length(Pitchi)
         disp(['Pitch angle = ', num2str(Pitchi(i))])
-        lgd_label{i} = [num2str(Pitchi(i), '%.4f'), ' deg'];
+        lgd_label{i} = [num2str(Pitchi(i), '%.1f'), ' deg'];
         for j = 11:length(TSRj) % Tip speed ratios below 1 omitted to avoid problems in the performance calculations
 
             if (TSRj(j) - ceil(TSRj(j))) == 0

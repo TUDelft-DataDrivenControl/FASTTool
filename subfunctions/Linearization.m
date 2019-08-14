@@ -290,6 +290,9 @@ for j = 1:length(WindSpeeds)
     Lin.Pitch(j) =  data.y_op{34}*pi/180;
     Lin.GSpeed(j) = data.y_op{33}*pi/30;
     Lin.RSpeed(j) = data.y_op{38}*pi/30;
+	Lin.x_op{j} = cell2mat(data.x_op);
+    Lin.y_op{j} = cell2mat(data.y_op);
+    Lin.u_op{j} = cell2mat(data.u_op);
 end
 
 % Reset the gearbox efficiency
