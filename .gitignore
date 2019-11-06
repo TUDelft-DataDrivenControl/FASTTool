@@ -4,10 +4,10 @@ Output
 slprj
 *.autosave
 ownScripts/
-NREL5MW_linearised.mat
 NREL5MW_tuned.mat
 *.asv
 *.slxc
 *.r2016b
 *.r2017b
 *.r2018b
+*.out
