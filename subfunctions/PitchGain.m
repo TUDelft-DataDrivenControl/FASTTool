@@ -577,7 +577,13 @@ function LoadLinMat_pushbutton_Callback(hObject, eventdata, handles)
                 end
                 handles.FirstAboveRatedLinModelIndex = LinListBoxItemsIndex(1);
                 set(handles.LinWindSpeed_listbox, 'string', {Lin.Pitch(LinListBoxItemsIndex)*180/pi})
-
+                
+                % Update the table with the pitch angles data
+                for i = 1:handles.TableSize
+                    TableData(i,1) = num2cell(Lin.Pitch(LinListBoxItemsIndex(i))*180/pi);
+                end
+                set(handles.Table, 'Data', TableData);
+                
                 % Allow multiple pitch angle selection in listbox
                 set(handles.LinWindSpeed_listbox, 'Max', 20, 'Min', 0);
 
