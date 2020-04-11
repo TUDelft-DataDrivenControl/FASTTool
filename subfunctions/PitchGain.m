@@ -580,8 +580,43 @@ function LoadLinMat_pushbutton_Callback(hObject, eventdata, handles)
                 
                 % Update the table with the pitch angles data
                 for i = 1:handles.TableSize
-                    TableData(i,1) = num2cell(Lin.Pitch(LinListBoxItemsIndex(i))*180/pi);
+                    if isnan(Lin.Pitch(LinListBoxItemsIndex(i)))
+                        TableData(i,1) = num2cell([]);
+                    else
+                        TableData(i,1) = num2cell(Lin.Pitch(LinListBoxItemsIndex(i))*180/pi);
+                    end
+                    if isnan(handles.Control.Pitch.KpGS(i))
+                        TableData(i,2) = num2cell([]);
+                    else
+                        TableData(i,2) = num2cell(handles.Control.Pitch.KpGS(i));
+                    end
+                    if isnan(handles.Control.Pitch.KiGS(i))
+                        TableData(i,3) = num2cell([]);
+                    else
+                        TableData(i,3) = num2cell(handles.Control.Pitch.KiGS(i));
+                    end
+                    if isnan(handles.Control.Pitch.Notch_beta1GS(i))
+                        TableData(i,4) = num2cell([]);
+                    else
+                        TableData(i,4) = num2cell(handles.Control.Pitch.Notch_beta1GS(i));
+                    end
+                    if isnan(handles.Control.Pitch.Notch_beta2GS(i))
+                        TableData(i,5) = num2cell([]);
+                    else
+                        TableData(i,5) = num2cell(handles.Control.Pitch.Notch_beta2GS(i));
+                    end
+                    if isnan(handles.Control.Pitch.Notch_wnGS(i))
+                        TableData(i,6) = num2cell([]);
+                    else
+                        TableData(i,6) = num2cell(handles.Control.Pitch.Notch_wnGS(i));
+                    end
+                    if isnan(handles.Control.Pitch.LowPassCutOffFreqGS(i))
+                        TableData(i,7) = num2cell([]);
+                    else
+                        TableData(i,7) = num2cell(handles.Control.Pitch.LowPassCutOffFreqGS(i));
+                    end
                 end
+                
                 set(handles.Table, 'Data', TableData);
                 
                 % Allow multiple pitch angle selection in listbox
