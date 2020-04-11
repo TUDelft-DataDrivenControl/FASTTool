@@ -540,6 +540,15 @@ function BodePlot(handles, undock, exportData)
     ylabel('Phase [deg]')
     set(gca, 'XScale', 'log')
     grid on
+    
+    if undock % TODO: make available also for the docked figures
+        figureHandle = findobj(Plot,'Type','axes','Visible','on');
+        try
+            linkaxes(figureHandle,'x')
+        catch err_msg
+            disp(err_msg.message)
+        end
+    end
 
 % --- Executes on button press in LoadLinMat_pushbutton.
 function LoadLinMat_pushbutton_Callback(hObject, eventdata, handles)
