@@ -799,16 +799,23 @@ function Controller = calculateController(handles, LoopGainCheckbox)
             for i = 1:length(handles.SelectedListboxContents)
                 selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Control.Pitch.ScheduledPitchAngles*180/pi);
                 if handles.Control.Pitch.LowPassOrder == 1
-                    Controller(1,i) = Controller(1,i)*tf(handles.Control.Pitch.LowPassCutOffFreqGS(selIndex),[1 handles.Control.Pitch.LowPassCutOffFreqGS(selIndex)]);
+                    Controller(1,i) = Controller(1,i)...
+                        *tf(handles.Control.Pitch.LowPassCutOffFreqGS(selIndex),...
+                            [1 handles.Control.Pitch.LowPassCutOffFreqGS(selIndex)]);
                 else
-                    Controller(1,i) = Controller(1,i)*tf(handles.Control.Pitch.LowPassCutOffFreqGS(selIndex)^2,[1 2/sqrt(2)*handles.Control.Pitch.LowPassCutOffFreqGS(selIndex) handles.Control.Pitch.LowPassCutOffFreqGS(selIndex)^2]);
+                    Controller(1,i) = Controller(1,i)...
+                        *tf(handles.Control.Pitch.LowPassCutOffFreqGS(selIndex)^2,...
+                            [1 2/sqrt(2)*handles.Control.Pitch.LowPassCutOffFreqGS(selIndex) handles.Control.Pitch.LowPassCutOffFreqGS(selIndex)^2]);
                 end
             end
         else
             if handles.Control.Pitch.LowPassOrder == 1
-                Controller(1,:) = Controller(1,:)*tf(handles.Control.Pitch.LowPassCutOffFreq,[1 handles.Control.Pitch.LowPassCutOffFreq]);
+                Controller(1,:) = Controller(1,:)...
+                    *tf(handles.Control.Pitch.LowPassCutOffFreq,[1 handles.Control.Pitch.LowPassCutOffFreq]);
             else
-                Controller(1,:) = Controller(1,:)*tf(handles.Control.Pitch.LowPassCutOffFreq^2,[1 2/sqrt(2)*handles.Control.Pitch.LowPassCutOffFreq handles.Control.Pitch.LowPassCutOffFreq^2]);
+                Controller(1,:) = Controller(1,:)...
+                    *tf(handles.Control.Pitch.LowPassCutOffFreq^2,...
+                    [1 2/sqrt(2)*handles.Control.Pitch.LowPassCutOffFreq handles.Control.Pitch.LowPassCutOffFreq^2]);
             end
         end
     end
@@ -819,14 +826,16 @@ function Controller = calculateController(handles, LoopGainCheckbox)
                 if all([handles.Control.Pitch.KpGS(selIndex) handles.Control.Pitch.KiGS(selIndex)] == 0)
                     Controller(1,i) = Controller(1,i);
                 else
-                    Controller(1,i) = Controller(1,i)*tf([handles.Control.Pitch.KpGS(selIndex) handles.Control.Pitch.KiGS(selIndex)], [1 0]);
+                    Controller(1,i) = Controller(1,i)...
+                        *tf([handles.Control.Pitch.KpGS(selIndex) handles.Control.Pitch.KiGS(selIndex)], [1 0]);
                 end
             end
         else
             if all([handles.Control.Pitch.Kp handles.Control.Pitch.Ki] == 0)
                 Controller(1,i) = Controller(1,i);
             else
-                Controller(1,:) = Controller(1,:)*tf([handles.Control.Pitch.Kp handles.Control.Pitch.Ki], [1 0]);
+                Controller(1,:) = Controller(1,:)...
+                    *tf([handles.Control.Pitch.Kp handles.Control.Pitch.Ki], [1 0]);
             end
         end
     end
@@ -839,8 +848,10 @@ function Controller = calculateController(handles, LoopGainCheckbox)
                     Controller(1,i) = Controller(1,i);
                 else
                     Controller(1,i) = Controller(1,i)...
-                        *tf([1 2*handles.Control.Pitch.Notch_beta1GS(selIndex)*handles.Control.Pitch.Notch_wnGS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)^2], [1 2*handles.Control.Pitch.Notch_beta2GS(selIndex)*handles.Control.Pitch.Notch_wnGS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)^2])...
-                        *tf([1 2*handles.Control.Pitch.Notch2_beta1GS(selIndex)*handles.Control.Pitch.Notch2_wnGS(selIndex) handles.Control.Pitch.Notch2_wnGS(selIndex)^2], [1 2*handles.Control.Pitch.Notch2_beta2GS(selIndex)*handles.Control.Pitch.Notch2_wnGS(selIndex) handles.Control.Pitch.Notch2_wnGS(selIndex)^2]);
+                        *tf([1 2*handles.Control.Pitch.Notch_beta1GS(selIndex)*handles.Control.Pitch.Notch_wnGS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)^2],...
+                            [1 2*handles.Control.Pitch.Notch_beta2GS(selIndex)*handles.Control.Pitch.Notch_wnGS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)^2])...
+                        *tf([1 2*handles.Control.Pitch.Notch2_beta1GS(selIndex)*handles.Control.Pitch.Notch2_wnGS(selIndex) handles.Control.Pitch.Notch2_wnGS(selIndex)^2],...
+                            [1 2*handles.Control.Pitch.Notch2_beta2GS(selIndex)*handles.Control.Pitch.Notch2_wnGS(selIndex) handles.Control.Pitch.Notch2_wnGS(selIndex)^2]);
                 end
             end
         else
@@ -849,8 +860,10 @@ function Controller = calculateController(handles, LoopGainCheckbox)
                 Controller(1,:) = Controller(1,:);
             else
                 Controller(1,:) = Controller(1,:)...
-                    *tf([1 2*handles.Control.Pitch.Notch_beta1*handles.Control.Pitch.Notch_wn handles.Control.Pitch.Notch_wn^2], [1 2*handles.Control.Pitch.Notch_beta2*handles.Control.Pitch.Notch_wn handles.Control.Pitch.Notch_wn^2])...
-                    *tf([1 2*handles.Control.Pitch.Notch2_beta1*handles.Control.Pitch.Notch2_wn handles.Control.Pitch.Notch2_wn^2], [1 2*handles.Control.Pitch.Notch2_beta2*handles.Control.Pitch.Notch2_wn handles.Control.Pitch.Notch2_wn^2]);
+                    *tf([1 2*handles.Control.Pitch.Notch_beta1*handles.Control.Pitch.Notch_wn handles.Control.Pitch.Notch_wn^2], ...
+                        [1 2*handles.Control.Pitch.Notch_beta2*handles.Control.Pitch.Notch_wn handles.Control.Pitch.Notch_wn^2])...
+                    *tf([1 2*handles.Control.Pitch.Notch2_beta1*handles.Control.Pitch.Notch2_wn handles.Control.Pitch.Notch2_wn^2], ...
+                        [1 2*handles.Control.Pitch.Notch2_beta2*handles.Control.Pitch.Notch2_wn handles.Control.Pitch.Notch2_wn^2]);
             end
         end
     end
