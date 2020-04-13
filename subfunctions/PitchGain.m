@@ -833,8 +833,8 @@ function Controller = calculateController(handles, LoopGainCheckbox)
         if handles.Control.Pitch.Scheduled
             for i = 1:length(handles.SelectedListboxContents)
                 selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Control.Pitch.ScheduledPitchAngles*180/pi);
-                if any([handles.Control.Pitch.Notch_beta1GS(selIndex) handles.Control.Pitch.Notch_beta2GS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)...
-                        handles.Control.Pitch.Notch2_beta1GS(selIndex) handles.Control.Pitch.Notch2_beta2GS(selIndex) handles.Control.Pitch.Notch2_wnGS(selIndex)] == 0)
+                if any([handles.Control.Pitch.Notch_beta1GS(selIndex) handles.Control.Pitch.Notch_beta2GS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)] == 0) ...
+                   && any([handles.Control.Pitch.Notch2_beta1GS(selIndex) handles.Control.Pitch.Notch2_beta2GS(selIndex) handles.Control.Pitch.Notch2_wnGS(selIndex)] == 0)
                     Controller(1,i) = Controller(1,i);
                 else
                     Controller(1,i) = Controller(1,i)...
@@ -843,8 +843,8 @@ function Controller = calculateController(handles, LoopGainCheckbox)
                 end
             end
         else
-            if any([handles.Control.Pitch.Notch_beta1 handles.Control.Pitch.Notch_beta2 handles.Control.Pitch.Notch_wn...
-                    handles.Control.Pitch.Notch2_beta1 handles.Control.Pitch.Notch2_beta2 handles.Control.Pitch.Notch2_wn] == 0)
+            if any([handles.Control.Pitch.Notch_beta1 handles.Control.Pitch.Notch_beta2 handles.Control.Pitch.Notch_wn] == 0)...
+               && any([handles.Control.Pitch.Notch2_beta1 handles.Control.Pitch.Notch2_beta2 handles.Control.Pitch.Notch2_wn] == 0)
                 Controller(1,:) = Controller(1,:);
             else
                 Controller(1,:) = Controller(1,:)...
