@@ -604,6 +604,7 @@ function BodePlot(handles, undock, exportData)
             semilogx(w, LoopGainPhaseResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{3}, 'LineWidth', plotLineWidth(3)), hold on
         end
     end
+    semilogx(w, 180*ones(1,length(w)), w, -180*ones(1,length(w)), 'LineStyle', '--', 'Color', 'k', 'LineWidth', 0.5)
     xlabel('Frequency [rad/s]')
     ylabel('Phase [deg]')
     set(gca, 'XScale', 'log')
