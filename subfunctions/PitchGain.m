@@ -26,6 +26,18 @@ handles.Input = varargin;
 % Update input fields
 set(handles.LPFCutOff_text, 'String', num2str(handles.Control.Pitch.LowPassCutOffFreq));
 
+% TODO: get rid of the field checking and update the baseline's MAT 
+% file in the future release
+if ~isfield(handles.Control.Pitch, 'Notch2_beta1GS') % executed once
+    handles.Control.Pitch.Notch2_beta1GS = zeros(14,1);
+end
+if ~isfield(handles.Control.Pitch, 'Notch2_beta2GS') % executed once
+    handles.Control.Pitch.Notch2_beta2GS = zeros(14,1);
+end
+if ~isfield(handles.Control.Pitch, 'Notch2_wnGS') % executed once
+    handles.Control.Pitch.Notch2_wnGS = zeros(14,1);
+end
+
 handles.TableSize = length(handles.Control.Pitch.KpGS);
 for i = 1:handles.TableSize
     if isnan(handles.Control.Pitch.ScheduledPitchAngles(i))
@@ -58,10 +70,29 @@ for i = 1:handles.TableSize
     else
         TableData(i,6) = num2cell(handles.Control.Pitch.Notch_wnGS(i));
     end
-    if isnan(handles.Control.Pitch.LowPassCutOffFreqGS(i))
+    % --- Second notch filter start
+    if isnan(handles.Control.Pitch.Notch2_beta1GS(i))
         TableData(i,7) = num2cell([]);
     else
-        TableData(i,7) = num2cell(handles.Control.Pitch.LowPassCutOffFreqGS(i));
+        TableData(i,7) = num2cell(handles.Control.Pitch.Notch2_beta1GS(i));
+    end
+    
+    if isnan(handles.Control.Pitch.Notch2_beta2GS(i))
+        TableData(i,8) = num2cell([]);
+    else
+        TableData(i,8) = num2cell(handles.Control.Pitch.Notch2_beta2GS(i));
+    end
+    
+    if isnan(handles.Control.Pitch.Notch2_wnGS(i))
+        TableData(i,9) = num2cell([]);
+    else
+        TableData(i,9) = num2cell(handles.Control.Pitch.Notch2_wnGS(i));
+    end
+    % --- Second notch filter end
+    if isnan(handles.Control.Pitch.LowPassCutOffFreqGS(i))
+        TableData(i,10) = num2cell([]);
+    else
+        TableData(i,10) = num2cell(handles.Control.Pitch.LowPassCutOffFreqGS(i));
     end
 end
 set(handles.Constant_Ki_textbox, 'String', num2str(handles.Control.Pitch.Ki));
@@ -70,7 +101,26 @@ set(handles.Constant_Kp_textbox, 'String', num2str(handles.Control.Pitch.Kp));
 set(handles.Constant_Notch_B1_textbox, 'String', num2str(handles.Control.Pitch.Notch_beta1));
 set(handles.Constant_Notch_B2_textbox, 'String', num2str(handles.Control.Pitch.Notch_beta2));
 set(handles.Constant_Notch_wn_textbox, 'String', num2str(handles.Control.Pitch.Notch_wn));
+% --- Second notch filter start
+% TODO: get rid of the field checking and update the baseline's MAT 
+% file in the future release
+if ~isfield(handles.Control.Pitch, 'Notch2_beta1')
+    handles.Control.Pitch.Notch2_beta1 = 0;
+end
+if ~isfield(handles.Control.Pitch, 'Notch2_beta2')
+    handles.Control.Pitch.Notch2_beta2 = 0;
+end
+if ~isfield(handles.Control.Pitch, 'Notch2_wn')
+    handles.Control.Pitch.Notch2_wn = 0;
+end
+set(handles.Constant_Notch2_B1_textbox, 'String', num2str(handles.Control.Pitch.Notch2_beta1));
+set(handles.Constant_Notch2_B2_textbox, 'String', num2str(handles.Control.Pitch.Notch2_beta2));
+set(handles.Constant_Notch2_wn_textbox, 'String', num2str(handles.Control.Pitch.Notch2_wn));
+% --- Second notch filter end
+
 set(handles.ExportPlotData_pushbutton, 'Enable', 'off')
+set(handles.RefreshPlot_pushbutton, 'Enable', 'off')
+
 
 set(handles.TableSize_textbox, 'String', length(handles.Control.Pitch.KpGS));
 set(handles.TableSize_slider, 'Value', length(handles.Control.Pitch.KpGS));
@@ -86,6 +136,9 @@ if handles.Control.Pitch.Scheduled
     set(handles.Constant_Notch_B1_textbox, 'Enable', 'off')
     set(handles.Constant_Notch_B2_textbox, 'Enable', 'off')
     set(handles.Constant_Notch_wn_textbox, 'Enable', 'off')
+    set(handles.Constant_Notch2_B1_textbox, 'Enable', 'off')
+    set(handles.Constant_Notch2_B2_textbox, 'Enable', 'off')
+    set(handles.Constant_Notch2_wn_textbox, 'Enable', 'off')
     set(handles.Table, 'Enable', 'on')
     set(handles.EditCells_checkbox, 'Enable', 'on')
     set(handles.EditCells_checkbox, 'Value', 0)
@@ -100,6 +153,9 @@ else
     set(handles.Constant_Notch_B1_textbox, 'Enable', 'on')
     set(handles.Constant_Notch_B2_textbox, 'Enable', 'on')
     set(handles.Constant_Notch_wn_textbox, 'Enable', 'on')
+    set(handles.Constant_Notch2_B1_textbox, 'Enable', 'on')
+    set(handles.Constant_Notch2_B2_textbox, 'Enable', 'on')
+    set(handles.Constant_Notch2_wn_textbox, 'Enable', 'on')
     set(handles.Table, 'Enable', 'off')
     set(handles.EditCells_checkbox, 'Enable', 'off')
     set(handles.EditCells_checkbox, 'Value', 0)
@@ -175,7 +231,13 @@ if handles.Save
     handles.Control.Pitch.Notch_beta1 = str2double(get(handles.Constant_Notch_B1_textbox,'String'));
     handles.Control.Pitch.Notch_beta2 = str2double(get(handles.Constant_Notch_B2_textbox,'String'));
     handles.Control.Pitch.Notch_wn = str2double(get(handles.Constant_Notch_wn_textbox,'String'));
-    
+
+    % Second notch start
+    handles.Control.Pitch.Notch2_beta1 = str2double(get(handles.Constant_Notch2_B1_textbox,'String'));
+    handles.Control.Pitch.Notch2_beta2 = str2double(get(handles.Constant_Notch2_B2_textbox,'String'));
+    handles.Control.Pitch.Notch2_wn = str2double(get(handles.Constant_Notch2_wn_textbox,'String'));
+    % Second notch end
+
     if get(handles.FirstOrderLPF_radio, 'Value')
         handles.Control.Pitch.LowPassOrder = 1;
     else
@@ -271,6 +333,9 @@ if get(hObject, 'Value')
     set(handles.Constant_Notch_B1_textbox, 'Enable', 'on')
     set(handles.Constant_Notch_B2_textbox, 'Enable', 'on')
     set(handles.Constant_Notch_wn_textbox, 'Enable', 'on')
+    set(handles.Constant_Notch2_B1_textbox, 'Enable', 'on')
+    set(handles.Constant_Notch2_B2_textbox, 'Enable', 'on')
+    set(handles.Constant_Notch2_wn_textbox, 'Enable', 'on')
     set(handles.LPFCutOff_text, 'Enable', 'on')
     set(handles.Table, 'Enable', 'off')
     set(handles.EditCells_checkbox, 'Enable', 'off')
@@ -287,6 +352,9 @@ if get(hObject, 'Value')
     set(handles.Constant_Notch_B1_textbox, 'Enable', 'off')
     set(handles.Constant_Notch_B2_textbox, 'Enable', 'off')
     set(handles.Constant_Notch_wn_textbox, 'Enable', 'off')
+    set(handles.Constant_Notch2_B1_textbox, 'Enable', 'off')
+    set(handles.Constant_Notch2_B2_textbox, 'Enable', 'off')
+    set(handles.Constant_Notch2_wn_textbox, 'Enable', 'off')
     set(handles.LPFCutOff_text, 'Enable', 'off')
     set(handles.Table, 'Enable', 'on')
     set(handles.EditCells_checkbox, 'Enable', 'on')
@@ -578,6 +646,16 @@ function LoadLinMat_pushbutton_Callback(hObject, eventdata, handles)
                 handles.FirstAboveRatedLinModelIndex = LinListBoxItemsIndex(1);
                 set(handles.LinWindSpeed_listbox, 'string', {Lin.Pitch(LinListBoxItemsIndex)*180/pi})
                 
+                if ~isfield(handles.Control.Pitch, 'Notch2_beta1GS')
+                    handles.Control.Pitch.Notch2_beta1GS = zeros(14,1);
+                end
+                if ~isfield(handles.Control.Pitch, 'Notch2_beta2GS')
+                    handles.Control.Pitch.Notch2_beta2GS = zeros(14,1);
+                end
+                if ~isfield(handles.Control.Pitch, 'Notch2_wnGS')
+                    handles.Control.Pitch.Notch2_wnGS = zeros(14,1);
+                end
+
                 % Update the table with the pitch angles data
                 for i = 1:handles.TableSize
                     if isnan(Lin.Pitch(LinListBoxItemsIndex(i)))
@@ -610,10 +688,27 @@ function LoadLinMat_pushbutton_Callback(hObject, eventdata, handles)
                     else
                         TableData(i,6) = num2cell(handles.Control.Pitch.Notch_wnGS(i));
                     end
-                    if isnan(handles.Control.Pitch.LowPassCutOffFreqGS(i))
+                    % --- Second notch filter
+                    if isnan(handles.Control.Pitch.Notch2_beta1GS(i))
                         TableData(i,7) = num2cell([]);
                     else
-                        TableData(i,7) = num2cell(handles.Control.Pitch.LowPassCutOffFreqGS(i));
+                        TableData(i,7) = num2cell(handles.Control.Pitch.Notch2_beta1GS(i));
+                    end
+                    if isnan(handles.Control.Pitch.Notch2_beta2GS(i))
+                        TableData(i,8) = num2cell([]);
+                    else
+                        TableData(i,8) = num2cell(handles.Control.Pitch.Notch2_beta2GS(i));
+                    end
+                    if isnan(handles.Control.Pitch.Notch2_wnGS(i))
+                        TableData(i,9) = num2cell([]);
+                    else
+                        TableData(i,9) = num2cell(handles.Control.Pitch.Notch2_wnGS(i));
+                    end
+                    % ---
+                    if isnan(handles.Control.Pitch.LowPassCutOffFreqGS(i))
+                        TableData(i,10) = num2cell([]);
+                    else
+                        TableData(i,10) = num2cell(handles.Control.Pitch.LowPassCutOffFreqGS(i));
                     end
                 end
                 
@@ -684,6 +779,7 @@ function EnableDisableCheckBoxes(handles, state)
 function EnableDisableButtons(handles, state)
     set(handles.UndockBode_pushbutton, 'Enable', state)
     set(handles.ExportPlotData_pushbutton, 'Enable', state)
+    set(handles.RefreshPlot_pushbutton, 'Enable', state)
     
 function [AllDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles)
     checkBox(1) = get(handles.PlotLPF_checkbox, 'Value');
@@ -737,17 +833,23 @@ function Controller = calculateController(handles, LoopGainCheckbox)
         if handles.Control.Pitch.Scheduled
             for i = 1:length(handles.SelectedListboxContents)
                 selIndex = findnearest(str2double(handles.SelectedListboxContents{i}), handles.Control.Pitch.ScheduledPitchAngles*180/pi);
-                if any([handles.Control.Pitch.Notch_beta1GS(selIndex) handles.Control.Pitch.Notch_beta2GS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)] == 0)
+                if any([handles.Control.Pitch.Notch_beta1GS(selIndex) handles.Control.Pitch.Notch_beta2GS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)...
+                        handles.Control.Pitch.Notch2_beta1GS(selIndex) handles.Control.Pitch.Notch2_beta2GS(selIndex) handles.Control.Pitch.Notch2_wnGS(selIndex)] == 0)
                     Controller(1,i) = Controller(1,i);
                 else
-                    Controller(1,i) = Controller(1,i)*tf([1 2*handles.Control.Pitch.Notch_beta1GS(selIndex)*handles.Control.Pitch.Notch_wnGS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)^2], [1 2*handles.Control.Pitch.Notch_beta2GS(selIndex)*handles.Control.Pitch.Notch_wnGS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)^2]);
+                    Controller(1,i) = Controller(1,i)...
+                        *tf([1 2*handles.Control.Pitch.Notch_beta1GS(selIndex)*handles.Control.Pitch.Notch_wnGS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)^2], [1 2*handles.Control.Pitch.Notch_beta2GS(selIndex)*handles.Control.Pitch.Notch_wnGS(selIndex) handles.Control.Pitch.Notch_wnGS(selIndex)^2])...
+                        *tf([1 2*handles.Control.Pitch.Notch2_beta1GS(selIndex)*handles.Control.Pitch.Notch2_wnGS(selIndex) handles.Control.Pitch.Notch2_wnGS(selIndex)^2], [1 2*handles.Control.Pitch.Notch2_beta2GS(selIndex)*handles.Control.Pitch.Notch2_wnGS(selIndex) handles.Control.Pitch.Notch2_wnGS(selIndex)^2]);
                 end
             end
         else
-            if any([handles.Control.Pitch.Notch_beta1 handles.Control.Pitch.Notch_beta2 handles.Control.Pitch.Notch_wn] == 0)
+            if any([handles.Control.Pitch.Notch_beta1 handles.Control.Pitch.Notch_beta2 handles.Control.Pitch.Notch_wn...
+                    handles.Control.Pitch.Notch2_beta1 handles.Control.Pitch.Notch2_beta2 handles.Control.Pitch.Notch2_wn] == 0)
                 Controller(1,:) = Controller(1,:);
             else
-                Controller(1,:) = Controller(1,:)*tf([1 2*handles.Control.Pitch.Notch_beta1*handles.Control.Pitch.Notch_wn handles.Control.Pitch.Notch_wn^2], [1 2*handles.Control.Pitch.Notch_beta2*handles.Control.Pitch.Notch_wn handles.Control.Pitch.Notch_wn^2]);
+                Controller(1,:) = Controller(1,:)...
+                    *tf([1 2*handles.Control.Pitch.Notch_beta1*handles.Control.Pitch.Notch_wn handles.Control.Pitch.Notch_wn^2], [1 2*handles.Control.Pitch.Notch_beta2*handles.Control.Pitch.Notch_wn handles.Control.Pitch.Notch_wn^2])...
+                    *tf([1 2*handles.Control.Pitch.Notch2_beta1*handles.Control.Pitch.Notch2_wn handles.Control.Pitch.Notch2_wn^2], [1 2*handles.Control.Pitch.Notch2_beta2*handles.Control.Pitch.Notch2_wn handles.Control.Pitch.Notch2_wn^2]);
             end
         end
     end
@@ -799,6 +901,11 @@ function handles = UpdateHandlesWithTableData(handles)
     Notch_beta1GS = nan(handles.TableSize,1);
     Notch_beta2GS = nan(handles.TableSize,1);
     Notch_wnGS = nan(handles.TableSize,1);
+    % Second notch filter start
+    Notch2_beta1GS = nan(handles.TableSize,1);
+    Notch2_beta2GS = nan(handles.TableSize,1);
+    Notch2_wnGS = nan(handles.TableSize,1);
+    % Second notch filter end
     LowPassCutOffFreqGS = nan(handles.TableSize,1);
 
     % Find invalid cells
@@ -843,9 +950,24 @@ function handles = UpdateHandlesWithTableData(handles)
             Notch_wnGS(i) = Table{i,6};
         end
         if invalid(i,7)
+            Notch2_beta1GS(i) = 0;
+        else
+            Notch2_beta1GS(i) = Table{i,7};
+        end
+        if invalid(i,8)
+            Notch2_beta2GS(i) = 0;
+        else
+            Notch2_beta2GS(i) = Table{i,8};
+        end
+        if invalid(i,9)
+            Notch2_wnGS(i) = 0;
+        else
+            Notch2_wnGS(i) = Table{i,9};
+        end
+        if invalid(i,10)
             LowPassCutOffFreqGS(i) = 0;
         else
-            LowPassCutOffFreqGS(i) = Table{i,7};
+            LowPassCutOffFreqGS(i) = Table{i,10};
         end
     end
     
@@ -855,6 +977,11 @@ function handles = UpdateHandlesWithTableData(handles)
     handles.Control.Pitch.Notch_beta1GS = Notch_beta1GS(~isnan(Notch_beta1GS));
     handles.Control.Pitch.Notch_beta2GS = Notch_beta2GS(~isnan(Notch_beta2GS));
     handles.Control.Pitch.Notch_wnGS = Notch_wnGS(~isnan(Notch_wnGS));
+    % Second notch filter start
+    handles.Control.Pitch.Notch2_beta1GS = Notch2_beta1GS(~isnan(Notch2_beta1GS));
+    handles.Control.Pitch.Notch2_beta2GS = Notch2_beta2GS(~isnan(Notch2_beta2GS));
+    handles.Control.Pitch.Notch2_wnGS = Notch2_wnGS(~isnan(Notch2_wnGS));
+    % Second notch filter end
     handles.Control.Pitch.LowPassCutOffFreqGS = LowPassCutOffFreqGS(~isnan(LowPassCutOffFreqGS));
 
 
@@ -864,7 +991,8 @@ function assertControllerGains(handles)
             questdlg('Warning: Proportional and integral gains must all be negative','Warning','OK','OK');
         end
     
-        if any(handles.Control.Pitch.Notch_beta1GS < 0) || any(handles.Control.Pitch.Notch_beta2GS < 0) || any(handles.Control.Pitch.Notch_wnGS < 0)
+        if (any(handles.Control.Pitch.Notch_beta1GS < 0) || any(handles.Control.Pitch.Notch_beta2GS < 0) || any(handles.Control.Pitch.Notch_wnGS < 0)) ...
+            || (any(handles.Control.Pitch.Notch2_beta1GS < 0) || any(handles.Control.Pitch.Notch2_beta2GS < 0) || any(handles.Control.Pitch.Notch2_wnGS < 0))
             questdlg('Warning: Notch parameters must all be positive','Warning','OK','OK');
         end
     
@@ -876,7 +1004,8 @@ function assertControllerGains(handles)
             questdlg('Warning: Proportional and integral gains must be negative','Warning','OK','OK');
         end
         
-        if any(handles.Control.Pitch.Notch_beta1 < 0) || any(handles.Control.Pitch.Notch_beta2 < 0) || any(handles.Control.Pitch.Notch_wn < 0)
+        if (any(handles.Control.Pitch.Notch_beta1 < 0) || any(handles.Control.Pitch.Notch_beta2 < 0) || any(handles.Control.Pitch.Notch_wn < 0))...
+            || (any(handles.Control.Pitch.Notch2_beta1 < 0) || any(handles.Control.Pitch.Notch2_beta2 < 0) || any(handles.Control.Pitch.Notch2_wn < 0))
             questdlg('Warning: Notch parameters must be positive','Warning','OK','OK');
         end
     
@@ -891,7 +1020,7 @@ handles = UpdateHandlesWithTableData(handles);
 guidata(hObject, handles);
 
 
-
+% --- First Notch Filter
 function Constant_Notch_B1_textbox_Callback(hObject, eventdata, handles)
 if isnan(str2double(get(hObject,'String')))
     set(hObject, 'String', num2str(handles.Control.Pitch.Notch_beta1))
@@ -929,6 +1058,45 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+
+% --- Second Notch Filter
+function Constant_Notch2_B1_textbox_Callback(hObject, eventdata, handles)
+if isnan(str2double(get(hObject,'String')))
+    set(hObject, 'String', num2str(handles.Control.Pitch.Notch2_beta1))
+end
+handles.Control.Pitch.Notch2_beta1 = str2double(get(hObject,'String'));
+guidata(hObject, handles);
+function Constant_Notch2_B1_textbox_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function Constant_Notch2_B2_textbox_Callback(hObject, eventdata, handles)
+if isnan(str2double(get(hObject,'String')))
+    set(hObject, 'String', num2str(handles.Control.Pitch.Notch2_beta2))
+end
+handles.Control.Pitch.Notch2_beta2 = str2double(get(hObject,'String'));
+guidata(hObject, handles);
+function Constant_Notch2_B2_textbox_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function Constant_Notch2_wn_textbox_Callback(hObject, eventdata, handles)
+if isnan(str2double(get(hObject,'String')))
+    set(hObject, 'String', num2str(handles.Control.Pitch.Notch2_wn))
+end
+handles.Control.Pitch.Notch2_wn = str2double(get(hObject,'String'));
+guidata(hObject, handles);
+function Constant_Notch2_wn_textbox_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
 % --- Executes on slider movement.
 function Window_slider_Callback(hObject, eventdata, handles)
 xpos = get(hObject, 'Value');
@@ -946,3 +1114,7 @@ end
 % --- Executes on button press in ExportPlotData_pushbutton.
 function ExportPlotData_pushbutton_Callback(hObject, eventdata, handles)
     BodePlot(handles, false, true)
+
+% --- Executes on button press in RefreshPlot_pushbutton.
+function RefreshPlot_pushbutton_Callback(hObject, eventdata, handles)
+    BodePlot(handles, false, false)
