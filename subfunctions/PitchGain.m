@@ -531,13 +531,14 @@ function BodePlot(handles, undock, exportData)
     Controller_PhaseResponse = angle(squeeze(Controller_FRF))'*180/pi;
 
     LoopGainFRF = freqresp(LoopGain, w);
-    LoopGainMagResponse = mag2db(squeeze(abs(LoopGainFRF)))';
+    LoopGainMagResponseAbs = squeeze(abs(LoopGainFRF))';
+    LoopGainMagResponse = mag2db(LoopGainMagResponseAbs);
     LoopGainPhaseResponse = angle(squeeze(LoopGainFRF))'*180/pi;
 
     PlantFRF = freqresp(Plant, w);
     PlantMagResponse = mag2db(squeeze(abs(PlantFRF)))';
     PlantPhaseResponse = angle(squeeze(PlantFRF))'*180/pi;
-    
+
     % Ensure the data is always saved column-wise for single line plots
     if size(Controller_MagResponse, 1) == 1
         Controller_MagResponse = Controller_MagResponse(:);
@@ -546,6 +547,40 @@ function BodePlot(handles, undock, exportData)
         LoopGainPhaseResponse = LoopGainPhaseResponse(:);
         PlantMagResponse = PlantMagResponse(:);
         PlantPhaseResponse = PlantPhaseResponse(:);
+    end
+
+    if get(handles.PlotLoopGain_checkbox,'value')
+        legendMargins = cell(length(handles.SelectedListboxContents), 6);
+        legendMargins(:,1) = {' GM: '};
+        legendMargins(:,3) = {' [dB] '};
+        legendMargins(:,4) = {' PM: '};
+        legendMargins(:,6) = {' [deg] '};
+        if length(handles.SelectedListboxContents) == 1
+            S = allmargin(LoopGainMagResponseAbs,LoopGainPhaseResponse,w');
+            GM = S.GainMargin(1);
+            PM = S.PhaseMargin(1);
+            GMFreq = S.GMFrequency(1);
+            PMFreq = S.PMFrequency(1);
+            
+            legendMargins{2} = num2str(mag2db(GM));
+            legendMargins{5} = num2str(PM);
+            legendMargins = strcat(legendMargins{1}, legendMargins{2}, ...
+                legendMargins{3}, legendMargins{4}, legendMargins{5}, ...
+                legendMargins{6});
+        else
+            for i = 1:length(handles.SelectedListboxContents)    
+                S(i) = allmargin(LoopGainMagResponseAbs(:,i),LoopGainPhaseResponse(:,i),w');
+                GM(i) = S(i).GainMargin(1);
+                PM(i) = S(i).PhaseMargin(1);
+                GMFreq(i) = S(i).GMFrequency(1);
+                PMFreq(i) = S(i).PMFrequency(1);
+                legendMargins{i,2} = num2str(mag2db(GM(i)));
+                legendMargins{i,5} = num2str(PM(i));
+            end
+            legendMargins = strcat(legendMargins(:,1), legendMargins(:,2), ...
+                legendMargins(:,3), legendMargins(:,4), legendMargins(:,5), ...
+                legendMargins(:,6));
+        end
     end
     
     if exportData
@@ -575,8 +610,11 @@ function BodePlot(handles, undock, exportData)
             h(i) = semilogx(w, Controller_MagResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{2}, 'LineWidth', plotLineWidth(2));
             hold on
         end
-        if get(handles.PlotLoopGain_checkbox, 'Value'), hold on
+        if get(handles.PlotLoopGain_checkbox, 'Value')
             h(i) = semilogx(w, LoopGainMagResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{3}, 'LineWidth', plotLineWidth(3));
+            hold on
+            h(i) = semilogx([GMFreq(i) GMFreq(i)], [0 -mag2db(GM(i))], 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{2}, 'LineWidth', plotLineWidth(1));
+            h(i) = semilogx(GMFreq(i), -mag2db(GM(i)), 'o', 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{1}, 'LineWidth', plotLineWidth(1));
         end
     end
     semilogx(w, zeros(1,length(w)), 'LineStyle', '--', 'Color', 'k', 'LineWidth', 0.5)
@@ -584,8 +622,11 @@ function BodePlot(handles, undock, exportData)
     ylabel('Magnitude [dB]')
     set(gca, 'XScale', 'log')
     grid on
+    
+    legendEntry = handles.SelectedListboxContents;
+    legendEntry = strcat(legendEntry,legendMargins);
     if exist('h', 'var')
-        legend(h, handles.SelectedListboxContents, 'Location', 'SouthWest')
+        legend(h, legendEntry, 'Location', 'SouthWest')
     end
     
     if undock
@@ -595,13 +636,24 @@ function BodePlot(handles, undock, exportData)
     end
     for i = 1:length(handles.SelectedListboxContents)
         if get(handles.PlotNom_checkbox, 'Value')
-            semilogx(w, PlantPhaseResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{1}, 'LineWidth', plotLineWidth(1)), hold on
+            semilogx(w, PlantPhaseResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{1}, 'LineWidth', plotLineWidth(1)); 
+            hold on
         end
         if not(AllDisabled)
-            semilogx(w, Controller_PhaseResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{2}, 'LineWidth', plotLineWidth(2)), hold on
+            semilogx(w, Controller_PhaseResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{2}, 'LineWidth', plotLineWidth(2)); 
+            hold on
         end
         if get(handles.PlotLoopGain_checkbox, 'Value')
-            semilogx(w, LoopGainPhaseResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{3}, 'LineWidth', plotLineWidth(3)), hold on
+            semilogx(w, LoopGainPhaseResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{3}, 'LineWidth', plotLineWidth(3)); 
+            hold on
+            if PM(i) >= 0
+                dotPM = -180 + PM(i);
+            else
+                dotPM = 180 + PM(i);
+            end
+            linePM = [-180 dotPM];
+            h(i) = semilogx([PMFreq(i) PMFreq(i)], linePM, 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{2}, 'LineWidth', plotLineWidth(1));
+            h(i) = semilogx(PMFreq(i), dotPM, 'o', 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{1}, 'LineWidth', plotLineWidth(1));
         end
     end
     semilogx(w, 180*ones(1,length(w)), w, -180*ones(1,length(w)), 'LineStyle', '--', 'Color', 'k', 'LineWidth', 0.5)
