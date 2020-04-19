@@ -486,6 +486,16 @@ function PlotLoopGain_checkbox_Callback(hObject, eventdata, handles)
     
 	BodePlot(handles, false, false)
 
+function PlotGMPM_checkbox_Callback(hObject, eventdata, handles)
+    [AllDisabled, ~] = CheckStateCheckboxes(handles);
+    if AllDisabled
+        EnableDisableButtons(handles, 'off')
+    else
+        EnableDisableButtons(handles, 'on')
+    end
+    
+	BodePlot(handles, false, false)
+
 %% --- Executes on button presses
 function UndockBode_pushbutton_Callback(hObject, eventdata, handles)
     BodePlot(handles, true, false)
@@ -550,11 +560,13 @@ function BodePlot(handles, undock, exportData)
     end
 
     if get(handles.PlotLoopGain_checkbox,'value')
-        legendMargins = cell(length(handles.SelectedListboxContents), 6);
-        legendMargins(:,1) = {' GM: '};
-        legendMargins(:,3) = {' [dB] '};
-        legendMargins(:,4) = {' PM: '};
-        legendMargins(:,6) = {' [deg] '};
+        if get(handles.PlotGMPM_checkbox,'value')
+            legendMargins = cell(length(handles.SelectedListboxContents), 6);
+            legendMargins(:,1) = {' GM: '};
+            legendMargins(:,3) = {' [dB] '};
+            legendMargins(:,4) = {' PM: '};
+            legendMargins(:,6) = {' [deg] '};
+        end
         if length(handles.SelectedListboxContents) == 1
             S = allmargin(LoopGainMagResponseAbs,LoopGainPhaseResponse,w');
             GM = S.GainMargin(1);
@@ -562,11 +574,13 @@ function BodePlot(handles, undock, exportData)
             GMFreq = S.GMFrequency(1);
             PMFreq = S.PMFrequency(1);
             
-            legendMargins{2} = num2str(mag2db(GM));
-            legendMargins{5} = num2str(PM);
-            legendMargins = strcat(legendMargins{1}, legendMargins{2}, ...
-                legendMargins{3}, legendMargins{4}, legendMargins{5}, ...
-                legendMargins{6});
+            if get(handles.PlotGMPM_checkbox,'value')
+                legendMargins{2} = num2str(mag2db(GM));
+                legendMargins{5} = num2str(PM);
+                legendMargins = strcat(legendMargins{1}, legendMargins{2}, ...
+                    legendMargins{3}, legendMargins{4}, legendMargins{5}, ...
+                    legendMargins{6});
+            end
         else
             for i = 1:length(handles.SelectedListboxContents)    
                 S(i) = allmargin(LoopGainMagResponseAbs(:,i),LoopGainPhaseResponse(:,i),w');
@@ -574,12 +588,16 @@ function BodePlot(handles, undock, exportData)
                 PM(i) = S(i).PhaseMargin(1);
                 GMFreq(i) = S(i).GMFrequency(1);
                 PMFreq(i) = S(i).PMFrequency(1);
-                legendMargins{i,2} = num2str(mag2db(GM(i)));
-                legendMargins{i,5} = num2str(PM(i));
+                if get(handles.PlotGMPM_checkbox,'value')
+                    legendMargins{i,2} = num2str(mag2db(GM(i)));
+                    legendMargins{i,5} = num2str(PM(i));
+                end
             end
-            legendMargins = strcat(legendMargins(:,1), legendMargins(:,2), ...
-                legendMargins(:,3), legendMargins(:,4), legendMargins(:,5), ...
-                legendMargins(:,6));
+            if get(handles.PlotGMPM_checkbox,'value')
+                legendMargins = strcat(legendMargins(:,1), legendMargins(:,2), ...
+                    legendMargins(:,3), legendMargins(:,4), legendMargins(:,5), ...
+                    legendMargins(:,6));
+            end
         end
     end
     
@@ -590,7 +608,7 @@ function BodePlot(handles, undock, exportData)
         
         PitchAngles = str2double(handles.SelectedListboxContents);
         
-        uisave({'frd_Plant', 'frd_Controller', 'frd_LoopGain', 'PitchAngles'}, 'ExportPlotData')
+        uisave({'frd_Plant', 'frd_Controller', 'frd_LoopGain', 'PitchAngles', 'GM', 'PM', 'GMFreq', 'PMFreq'}, 'ExportPlotData')
     end
 
     if undock
@@ -611,10 +629,13 @@ function BodePlot(handles, undock, exportData)
             hold on
         end
         if get(handles.PlotLoopGain_checkbox, 'Value')
+            if get(handles.PlotGMPM_checkbox,'value')
+                h(i) = semilogx([GMFreq(i) GMFreq(i)], [0 -mag2db(GM(i))], 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{2}, 'LineWidth', plotLineWidth(1));
+                h(i) = semilogx(GMFreq(i), -mag2db(GM(i)), 'o', 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{1}, 'LineWidth', plotLineWidth(1));
+
+            end
             h(i) = semilogx(w, LoopGainMagResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{3}, 'LineWidth', plotLineWidth(3));
             hold on
-            h(i) = semilogx([GMFreq(i) GMFreq(i)], [0 -mag2db(GM(i))], 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{2}, 'LineWidth', plotLineWidth(1));
-            h(i) = semilogx(GMFreq(i), -mag2db(GM(i)), 'o', 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{1}, 'LineWidth', plotLineWidth(1));
         end
     end
     semilogx(w, zeros(1,length(w)), 'LineStyle', '--', 'Color', 'k', 'LineWidth', 0.5)
@@ -624,7 +645,9 @@ function BodePlot(handles, undock, exportData)
     grid on
     
     legendEntry = handles.SelectedListboxContents;
-    legendEntry = strcat(legendEntry,legendMargins);
+    if get(handles.PlotGMPM_checkbox,'value') && exist('legendMargins','var')
+        legendEntry = strcat(legendEntry,legendMargins);
+    end
     if exist('h', 'var')
         legend(h, legendEntry, 'Location', 'SouthWest')
     end
@@ -652,8 +675,10 @@ function BodePlot(handles, undock, exportData)
                 dotPM = 180 + PM(i);
             end
             linePM = [-180 dotPM];
-            h(i) = semilogx([PMFreq(i) PMFreq(i)], linePM, 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{2}, 'LineWidth', plotLineWidth(1));
-            h(i) = semilogx(PMFreq(i), dotPM, 'o', 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{1}, 'LineWidth', plotLineWidth(1));
+            if get(handles.PlotGMPM_checkbox,'value')
+                h(i) = semilogx([PMFreq(i) PMFreq(i)], linePM, 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{2}, 'LineWidth', plotLineWidth(1));
+                h(i) = semilogx(PMFreq(i), dotPM, 'o', 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{1}, 'LineWidth', plotLineWidth(1));
+            end
         end
     end
     semilogx(w, 180*ones(1,length(w)), w, -180*ones(1,length(w)), 'LineStyle', '--', 'Color', 'k', 'LineWidth', 0.5)
@@ -828,6 +853,7 @@ function EnableDisableCheckBoxes(handles, state)
     set(handles.PlotNotch_checkbox, 'Enable', state)
     set(handles.PlotNom_checkbox, 'Enable', state)
     set(handles.PlotLoopGain_checkbox, 'Enable', state)
+    set(handles.PlotGMPM_checkbox, 'Enable', state)
     
 function EnableDisableButtons(handles, state)
     set(handles.UndockBode_pushbutton, 'Enable', state)
@@ -840,8 +866,9 @@ function [AllDisabled, AllControllersEnabled] = CheckStateCheckboxes(handles)
     checkBox(3) = get(handles.PlotNotch_checkbox, 'Value');
     checkBox(4) = get(handles.PlotNom_checkbox, 'Value');
     checkBox(5) = get(handles.PlotLoopGain_checkbox, 'Value');
+    checkBox(6) = get(handles.PlotGMPM_checkbox, 'Value');
     
-    AllDisabled = all(checkBox(1:5) == 0);
+    AllDisabled = all(checkBox(1:6) == 0);
     AllControllersEnabled = all(checkBox(1:3) == 1);
     
 function Controller = calculateController(handles, LoopGainCheckbox)
