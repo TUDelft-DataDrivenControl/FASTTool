@@ -260,11 +260,11 @@ delete(hObject)
 %% Edit cells - checkbox
 function EditCells_checkbox_Callback(hObject, eventdata, handles)
 if get(hObject, 'Value') == 1
-    set(handles.Table, 'ColumnEditable', [true true true true true true true]);
+    set(handles.Table, 'ColumnEditable', true(1, handles.TableSize));
     set(handles.TableSize_textbox, 'Enable', 'on')
     set(handles.TableSize_slider, 'Enable', 'on')
 else
-    set(handles.Table, 'ColumnEditable', [false false false false false false false]);
+    set(handles.Table, 'ColumnEditable', false(1, handles.TableSize));
     set(handles.TableSize_textbox, 'Enable', 'off')
     set(handles.TableSize_slider, 'Enable', 'off')
 end
@@ -278,7 +278,7 @@ guidata(hObject, handles);
 function Table_KeyPressFcn(hObject, eventdata, handles)
 
 % Paste functionality
-if strcmpi(char(eventdata.Modifier),'control') && strcmp(eventdata.Key, 'v')
+if strcmpi(char(eventdata.Modifier),'control') && strcmp(eventdata.Key, 'v') && all(get(handles.Table, 'ColumnEditable'))
     
     % Get and reshape clipboard data
     Paste = clipboard('paste');
