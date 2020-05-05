@@ -503,6 +503,7 @@ function UndockBode_pushbutton_Callback(hObject, eventdata, handles)
 function BodePlot(handles, undock, exportData)
    	cla(handles.BodeMag_axes,'reset')
     cla(handles.BodePhase_axes,'reset')
+    clc; % to clear all warnings
     
     % Create vector of plot colors
     plotCol = linspace(0.8, 0, length(handles.SelectedListboxContents));
@@ -534,17 +535,15 @@ function BodePlot(handles, undock, exportData)
         LoopGain(1,i) = series(ControllerLG(:,i), Plant(:,i));
     end
     
-    w_llimit = -2; % change this limit if one of the margins can't be found
+    w_llimit = -2; 
     w_ulimit = 2;
     w = logspace(w_llimit, w_ulimit, 1000);
 
-    [ControllerLG_FRF, Controller_MagResponse, Controller_PhaseResponse] = ...
+    [~, Controller_MagResponse, Controller_PhaseResponse] = ...
         calculateFreqResp(Controller, w);
-    Controller_FRF = freqresp(Controller, w);
     
     [LoopGainFRF, LoopGainMagResponse, LoopGainPhaseResponse] = ...
         calculateFreqResp(LoopGain, w);
-    LoopGainMagResponseAbs = db2mag(LoopGainMagResponse); % for margins calculation
     
     [PlantFRF, PlantMagResponse, PlantPhaseResponse] = ...
         calculateFreqResp(Plant, w);
@@ -553,7 +552,6 @@ function BodePlot(handles, undock, exportData)
     if size(Controller_MagResponse, 1) == 1
         Controller_MagResponse = Controller_MagResponse(:);
         Controller_PhaseResponse = Controller_PhaseResponse(:);
-        LoopGainMagResponseAbs = LoopGainMagResponseAbs(:);
         LoopGainMagResponse = LoopGainMagResponse(:);
         LoopGainPhaseResponse = LoopGainPhaseResponse(:);
         PlantMagResponse = PlantMagResponse(:);
@@ -569,50 +567,96 @@ function BodePlot(handles, undock, exportData)
         'DelayMargin', cell_prealloc, ...
         'DMFrequency', cell_prealloc, ...
         'Stable', cell_prealloc);
-    GM = zeros(1, length(handles.SelectedListboxContents));
+    GM = nan(1, length(handles.SelectedListboxContents)); 
     PM = GM;
     GMFreq = GM;
     PMFreq = GM;
-    for i = 1:length(handles.SelectedListboxContents)    
-        S(i) = allmargin(LoopGainMagResponseAbs(:,i),LoopGainPhaseResponse(:,i),w');
-        GM(i) = mag2db(S(i).GainMargin(1));
-        PM(i) = S(i).PhaseMargin(1);
-        GMFreq(i) = S(i).GMFrequency(1);
-        PMFreq(i) = S(i).PMFrequency(1);
+    IsGMFreqWithinLimit = true(1, length(handles.SelectedListboxContents));
+    IsPMFreqWithinLimit = IsGMFreqWithinLimit;
+    warning('off','backtrace') % suppress warning
+    if get(handles.PlotGMPM_checkbox,'value')
+        LoopGainMagResponseAbs = db2mag(LoopGainMagResponse); % for margins calculation
+        for i = 1:length(handles.SelectedListboxContents)    
+            S(i) = allmargin(LoopGainMagResponseAbs(:,i),LoopGainPhaseResponse(:,i),w');
+            try
+                GM(i) = mag2db(S(i).GainMargin(1));
+                PM(i) = S(i).PhaseMargin(1);
+            catch
+                S(i) = allmargin(LoopGain(1,i));
+                try
+                    GM(i) = mag2db(S(i).GainMargin(1));
+                    PM(i) = S(i).PhaseMargin(1);
+                catch
+                    quest_msg = sprintf("Cannot obtain GM and/or PM for the model with pitch angle %.3f [deg]! Please try to increase the gain (Kp or Ki) and try again!", ...
+                        string(handles.SelectedListboxContents{i}));
+                    questdlg(quest_msg, 'Error', 'OK', 'OK');
+                    continue;
+                end
+            end
+            
+            msg = "";
+            GMFreq(i) = S(i).GMFrequency(1);
+            IsGMFreqWithinLimit(i) = (log10(GMFreq(i)) >= w_llimit) && (log10(GMFreq(i)) <= w_ulimit);
+            if ~IsGMFreqWithinLimit(i)
+                msg = sprintf("Gain margin frequency is outside the figure axis limit: %.5f! [rad/s] ", ...
+                    GMFreq(i));
+            end
+            
+            PMFreq(i) = S(i).PMFrequency(1);
+            IsPMFreqWithinLimit(i) = (log10(PMFreq(i)) >= w_llimit) && (log10(PMFreq(i)) <= w_ulimit);
+            if ~IsPMFreqWithinLimit(i)
+                msg = msg + sprintf("Phase margin frequency is outside the figure axis limit: %.5f! [rad/s] ", ...
+                    PMFreq(i));
+            end
+
+            if ~IsGMFreqWithinLimit(i) || ~IsPMFreqWithinLimit(i)
+                msg = "Cannot draw one or more stability margins! " + msg;
+                warning(msg);
+            end
+        end
     end
+    warning('on','backtrace')
     
     if get(handles.PlotGMPM_checkbox,'value')
-        legendMargins = cell(length(handles.SelectedListboxContents), 6);
+        legendMargins = cell(length(handles.SelectedListboxContents), 12);
         legendMargins(:,1) = {' GM: '};
         legendMargins(:,3) = {' [dB] '};
-        legendMargins(:,4) = {' PM: '};
-        legendMargins(:,6) = {' [deg] '};
-
-        if length(handles.SelectedListboxContents) == 1
-            legendMargins{2} = num2str(GM,'%.2f');
-            legendMargins{5} = num2str(PM,'%.2f');
-            legendMargins = strcat(legendMargins{1}, legendMargins{2}, ...
-                legendMargins{3}, legendMargins{4}, legendMargins{5}, ...
-                legendMargins{6});
-        else
-            for i = 1:length(handles.SelectedListboxContents)    
-                legendMargins{i,2} = num2str(GM(i));
-                legendMargins{i,5} = num2str(PM(i));
-            end
-            legendMargins = strcat(legendMargins(:,1), legendMargins(:,2), ...
-                legendMargins(:,3), legendMargins(:,4), legendMargins(:,5), ...
-                legendMargins(:,6));
+        legendMargins(:,4) = {' \omega_{gc}: '};
+        legendMargins(:,6) = {' [rad/s] '};
+        legendMargins(:,7) = {' PM: '};
+        legendMargins(:,9) = {' [deg] '};
+        legendMargins(:,10) = {' \omega_{pc}: '};
+        legendMargins(:,12) = {' [rad/s] '}; 
+        
+        for i = 1:length(handles.SelectedListboxContents)    
+            legendMargins{i,2} = num2str(GM(i),'%.2f');
+            legendMargins{i,5} = num2str(GMFreq(i),'%.4f');
+            legendMargins{i,8} = num2str(PM(i), '%.2f');
+            legendMargins{i,11} = num2str(PMFreq(i),'%.4f');
         end
+        legendMargins = strcat(legendMargins(:,1), legendMargins(:,2), ...
+            legendMargins(:,3), legendMargins(:,4), legendMargins(:,5), ...
+            legendMargins(:,6), legendMargins(:,7), legendMargins(:,8), ...
+            legendMargins(:,9), legendMargins(:,10), legendMargins(:,11), ...
+            legendMargins(:,12));
     end
     
     if exportData
+        ControllerLG_FRF = freqresp(ControllerLG, w);
+        
         frd_Plant = frd(PlantFRF, w);
         frd_Controller = frd(ControllerLG_FRF, w);
         frd_LoopGain = frd(LoopGainFRF, w);
         
         PitchAngles = str2double(handles.SelectedListboxContents);
         
-        uisave({'frd_Plant', 'frd_Controller', 'frd_LoopGain', 'PitchAngles', 'GM', 'PM', 'GMFreq', 'PMFreq'}, 'ExportPlotData')
+        variablesToSave = {'frd_Plant', 'frd_Controller', 'frd_LoopGain', 'PitchAngles'};
+        
+        if get(handles.PlotGMPM_checkbox,'value')
+            variablesToSave = [variablesToSave {'GM', 'PM', 'GMFreq', 'PMFreq'}];
+        end
+        
+        uisave(variablesToSave, 'ExportPlotData');
     end
 
     if undock
@@ -633,7 +677,7 @@ function BodePlot(handles, undock, exportData)
             hold on
         end
         if get(handles.PlotLoopGain_checkbox, 'Value')
-            if get(handles.PlotGMPM_checkbox,'value') && (log10(GMFreq(i)) <= w_ulimit) && (log10(GMFreq(i)) >= w_llimit) 
+            if get(handles.PlotGMPM_checkbox,'value') && IsGMFreqWithinLimit(i)
                 h(i) = semilogx([GMFreq(i) GMFreq(i)], [0 -GM(i)], 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{2}, 'LineWidth', plotLineWidth(1));
                 h(i) = semilogx(GMFreq(i), -GM(i), 'o', 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{1}, 'LineWidth', plotLineWidth(1));
 
@@ -673,7 +717,7 @@ function BodePlot(handles, undock, exportData)
         if get(handles.PlotLoopGain_checkbox, 'Value')
             semilogx(w, LoopGainPhaseResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{3}, 'LineWidth', plotLineWidth(3)); 
             hold on
-            if get(handles.PlotGMPM_checkbox,'value') && (log10(PMFreq(i)) <= w_ulimit) && (log10(PMFreq(i)) >= w_llimit) 
+            if get(handles.PlotGMPM_checkbox,'value') && IsPMFreqWithinLimit(i)
                 if PM(i) >= 0
                     dotPM = -180 + PM(i);
                 else
