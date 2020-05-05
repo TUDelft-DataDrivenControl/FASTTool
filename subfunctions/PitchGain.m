@@ -533,8 +533,9 @@ function BodePlot(handles, undock, exportData)
     for i = 1:length(handles.SelectedListboxContents)
         LoopGain(1,i) = series(ControllerLG(:,i), Plant(:,i));
     end
-
-    w = logspace(-2,2,1000);
+    
+    w_limit = 2; % change this limit if one of the margins can't be found
+    w = logspace(-w_limit, w_limit,1000);
     Controller_FRF = freqresp(Controller, w);
     ControllerLG_FRF = freqresp(ControllerLG, w);
     Controller_MagResponse = mag2db(squeeze(abs(Controller_FRF)))';
@@ -553,51 +554,55 @@ function BodePlot(handles, undock, exportData)
     if size(Controller_MagResponse, 1) == 1
         Controller_MagResponse = Controller_MagResponse(:);
         Controller_PhaseResponse = Controller_PhaseResponse(:);
+        LoopGainMagResponseAbs = LoopGainMagResponseAbs(:);
         LoopGainMagResponse = LoopGainMagResponse(:);
         LoopGainPhaseResponse = LoopGainPhaseResponse(:);
         PlantMagResponse = PlantMagResponse(:);
         PlantPhaseResponse = PlantPhaseResponse(:);
     end
+    
+    % Stability margins calculation
+    cell_prealloc = cell(1,length(handles.SelectedListboxContents));
+    S = struct('GainMargin', cell_prealloc, ...
+        'GMFrequency', cell_prealloc, ...
+        'PhaseMargin', cell_prealloc, ...
+        'PMFrequency', cell_prealloc, ...
+        'DelayMargin', cell_prealloc, ...
+        'DMFrequency', cell_prealloc, ...
+        'Stable', cell_prealloc);
+    GM = zeros(1, length(handles.SelectedListboxContents));
+    PM = GM;
+    GMFreq = GM;
+    PMFreq = GM;
+    for i = 1:length(handles.SelectedListboxContents)    
+        S(i) = allmargin(LoopGainMagResponseAbs(:,i),LoopGainPhaseResponse(:,i),w');
+        GM(i) = mag2db(S(i).GainMargin(1));
+        PM(i) = S(i).PhaseMargin(1);
+        GMFreq(i) = S(i).GMFrequency(1);
+        PMFreq(i) = S(i).PMFrequency(1);
+    end
+    
+    if get(handles.PlotGMPM_checkbox,'value')
+        legendMargins = cell(length(handles.SelectedListboxContents), 6);
+        legendMargins(:,1) = {' GM: '};
+        legendMargins(:,3) = {' [dB] '};
+        legendMargins(:,4) = {' PM: '};
+        legendMargins(:,6) = {' [deg] '};
 
-    if get(handles.PlotLoopGain_checkbox,'value')
-        if get(handles.PlotGMPM_checkbox,'value')
-            legendMargins = cell(length(handles.SelectedListboxContents), 6);
-            legendMargins(:,1) = {' GM: '};
-            legendMargins(:,3) = {' [dB] '};
-            legendMargins(:,4) = {' PM: '};
-            legendMargins(:,6) = {' [deg] '};
-        end
         if length(handles.SelectedListboxContents) == 1
-            S = allmargin(LoopGainMagResponseAbs,LoopGainPhaseResponse,w');
-            GM = S.GainMargin(1);
-            PM = S.PhaseMargin(1);
-            GMFreq = S.GMFrequency(1);
-            PMFreq = S.PMFrequency(1);
-            
-            if get(handles.PlotGMPM_checkbox,'value')
-                legendMargins{2} = num2str(mag2db(GM));
-                legendMargins{5} = num2str(PM);
-                legendMargins = strcat(legendMargins{1}, legendMargins{2}, ...
-                    legendMargins{3}, legendMargins{4}, legendMargins{5}, ...
-                    legendMargins{6});
-            end
+            legendMargins{2} = num2str(GM);
+            legendMargins{5} = num2str(PM);
+            legendMargins = strcat(legendMargins{1}, legendMargins{2}, ...
+                legendMargins{3}, legendMargins{4}, legendMargins{5}, ...
+                legendMargins{6});
         else
             for i = 1:length(handles.SelectedListboxContents)    
-                S(i) = allmargin(LoopGainMagResponseAbs(:,i),LoopGainPhaseResponse(:,i),w');
-                GM(i) = S(i).GainMargin(1);
-                PM(i) = S(i).PhaseMargin(1);
-                GMFreq(i) = S(i).GMFrequency(1);
-                PMFreq(i) = S(i).PMFrequency(1);
-                if get(handles.PlotGMPM_checkbox,'value')
-                    legendMargins{i,2} = num2str(mag2db(GM(i)));
-                    legendMargins{i,5} = num2str(PM(i));
-                end
+                legendMargins{i,2} = num2str(GM(i));
+                legendMargins{i,5} = num2str(PM(i));
             end
-            if get(handles.PlotGMPM_checkbox,'value')
-                legendMargins = strcat(legendMargins(:,1), legendMargins(:,2), ...
-                    legendMargins(:,3), legendMargins(:,4), legendMargins(:,5), ...
-                    legendMargins(:,6));
-            end
+            legendMargins = strcat(legendMargins(:,1), legendMargins(:,2), ...
+                legendMargins(:,3), legendMargins(:,4), legendMargins(:,5), ...
+                legendMargins(:,6));
         end
     end
     
@@ -630,8 +635,8 @@ function BodePlot(handles, undock, exportData)
         end
         if get(handles.PlotLoopGain_checkbox, 'Value')
             if get(handles.PlotGMPM_checkbox,'value')
-                h(i) = semilogx([GMFreq(i) GMFreq(i)], [0 -mag2db(GM(i))], 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{2}, 'LineWidth', plotLineWidth(1));
-                h(i) = semilogx(GMFreq(i), -mag2db(GM(i)), 'o', 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{1}, 'LineWidth', plotLineWidth(1));
+                h(i) = semilogx([GMFreq(i) GMFreq(i)], [0 -GM(i)], 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{2}, 'LineWidth', plotLineWidth(1));
+                h(i) = semilogx(GMFreq(i), -GM(i), 'o', 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{1}, 'LineWidth', plotLineWidth(1));
 
             end
             h(i) = semilogx(w, LoopGainMagResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{3}, 'LineWidth', plotLineWidth(3));
@@ -669,25 +674,25 @@ function BodePlot(handles, undock, exportData)
         if get(handles.PlotLoopGain_checkbox, 'Value')
             semilogx(w, LoopGainPhaseResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{3}, 'LineWidth', plotLineWidth(3)); 
             hold on
-            if PM(i) >= 0
-                dotPM = -180 + PM(i);
-            else
-                dotPM = 180 + PM(i);
-            end
-            linePM = [-180 dotPM];
             if get(handles.PlotGMPM_checkbox,'value')
+                if PM(i) >= 0
+                    dotPM = -180 + PM(i);
+                else
+                    dotPM = 180 + PM(i);
+                end
+                linePM = [-180 dotPM];
                 h(i) = semilogx([PMFreq(i) PMFreq(i)], linePM, 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{2}, 'LineWidth', plotLineWidth(1));
                 h(i) = semilogx(PMFreq(i), dotPM, 'o', 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{1}, 'LineWidth', plotLineWidth(1));
             end
         end
     end
-    semilogx(w, 180*ones(1,length(w)), w, -180*ones(1,length(w)), 'LineStyle', '--', 'Color', 'k', 'LineWidth', 0.5)
+    semilogx(w, 180*ones(1,length(w)), w, -180*ones(1,length(w)), 'LineStyle', '--', 'Color', 'k', 'LineWidth', 0.5);
     xlabel('Frequency [rad/s]')
     ylabel('Phase [deg]')
     set(gca, 'XScale', 'log')
     grid on
     
-    if undock % TODO: make available also for the docked figures
+    if undock
         figureHandle = findobj(Plot,'Type','axes','Visible','on');
         try
             linkaxes(figureHandle,'x')
