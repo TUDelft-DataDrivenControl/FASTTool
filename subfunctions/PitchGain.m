@@ -534,21 +534,20 @@ function BodePlot(handles, undock, exportData)
         LoopGain(1,i) = series(ControllerLG(:,i), Plant(:,i));
     end
     
-    w_limit = 2; % change this limit if one of the margins can't be found
-    w = logspace(-w_limit, w_limit,1000);
+    w_llimit = -2; % change this limit if one of the margins can't be found
+    w_ulimit = 2;
+    w = logspace(w_llimit, w_ulimit, 1000);
+
+    [ControllerLG_FRF, Controller_MagResponse, Controller_PhaseResponse] = ...
+        calculateFreqResp(Controller, w);
     Controller_FRF = freqresp(Controller, w);
-    ControllerLG_FRF = freqresp(ControllerLG, w);
-    Controller_MagResponse = mag2db(squeeze(abs(Controller_FRF)))';
-    Controller_PhaseResponse = angle(squeeze(Controller_FRF))'*180/pi;
-
-    LoopGainFRF = freqresp(LoopGain, w);
-    LoopGainMagResponseAbs = squeeze(abs(LoopGainFRF))';
-    LoopGainMagResponse = mag2db(LoopGainMagResponseAbs);
-    LoopGainPhaseResponse = angle(squeeze(LoopGainFRF))'*180/pi;
-
-    PlantFRF = freqresp(Plant, w);
-    PlantMagResponse = mag2db(squeeze(abs(PlantFRF)))';
-    PlantPhaseResponse = angle(squeeze(PlantFRF))'*180/pi;
+    
+    [LoopGainFRF, LoopGainMagResponse, LoopGainPhaseResponse] = ...
+        calculateFreqResp(LoopGain, w);
+    LoopGainMagResponseAbs = db2mag(LoopGainMagResponse); % for margins calculation
+    
+    [PlantFRF, PlantMagResponse, PlantPhaseResponse] = ...
+        calculateFreqResp(Plant, w);
 
     % Ensure the data is always saved column-wise for single line plots
     if size(Controller_MagResponse, 1) == 1
@@ -590,8 +589,8 @@ function BodePlot(handles, undock, exportData)
         legendMargins(:,6) = {' [deg] '};
 
         if length(handles.SelectedListboxContents) == 1
-            legendMargins{2} = num2str(GM);
-            legendMargins{5} = num2str(PM);
+            legendMargins{2} = num2str(GM,'%.2f');
+            legendMargins{5} = num2str(PM,'%.2f');
             legendMargins = strcat(legendMargins{1}, legendMargins{2}, ...
                 legendMargins{3}, legendMargins{4}, legendMargins{5}, ...
                 legendMargins{6});
@@ -634,7 +633,7 @@ function BodePlot(handles, undock, exportData)
             hold on
         end
         if get(handles.PlotLoopGain_checkbox, 'Value')
-            if get(handles.PlotGMPM_checkbox,'value')
+            if get(handles.PlotGMPM_checkbox,'value') && (log10(GMFreq(i)) <= w_ulimit) && (log10(GMFreq(i)) >= w_llimit) 
                 h(i) = semilogx([GMFreq(i) GMFreq(i)], [0 -GM(i)], 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{2}, 'LineWidth', plotLineWidth(1));
                 h(i) = semilogx(GMFreq(i), -GM(i), 'o', 'Color', [0 0.8 0], 'LineStyle', plotLineStyle{1}, 'LineWidth', plotLineWidth(1));
 
@@ -674,7 +673,7 @@ function BodePlot(handles, undock, exportData)
         if get(handles.PlotLoopGain_checkbox, 'Value')
             semilogx(w, LoopGainPhaseResponse(:,i), 'Color', ones(1,3)*plotCol(i), 'LineStyle', plotLineStyle{3}, 'LineWidth', plotLineWidth(3)); 
             hold on
-            if get(handles.PlotGMPM_checkbox,'value')
+            if get(handles.PlotGMPM_checkbox,'value') && (log10(PMFreq(i)) <= w_ulimit) && (log10(PMFreq(i)) >= w_llimit) 
                 if PM(i) >= 0
                     dotPM = -180 + PM(i);
                 else
@@ -701,6 +700,11 @@ function BodePlot(handles, undock, exportData)
         end
     end
 
+function [frf, MagResponse, PhaseResponse] = calculateFreqResp(transfer_function, w)
+    frf = freqresp(transfer_function, w);
+    MagResponse = mag2db(squeeze(abs(frf)))';
+    PhaseResponse = angle(squeeze(frf))'*180/pi;
+    
 % --- Executes on button press in LoadLinMat_pushbutton.
 function LoadLinMat_pushbutton_Callback(hObject, eventdata, handles)
     % Get file name
