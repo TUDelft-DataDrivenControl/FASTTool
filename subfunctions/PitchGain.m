@@ -787,6 +787,10 @@ function LoadLinMat_pushbutton_Callback(hObject, eventdata, handles)
                     handles.Control.Pitch.Notch2_wnGS = zeros(14,1);
                 end
 
+                if handles.TableSize ~= length(LinListBoxItemsIndex)
+                    handles.TableSize = length(LinListBoxItemsIndex);
+                end
+                
                 % Update the table with the pitch angles data
                 for i = 1:handles.TableSize
                     if isnan(Lin.Pitch(LinListBoxItemsIndex(i)))
