@@ -787,67 +787,71 @@ function LoadLinMat_pushbutton_Callback(hObject, eventdata, handles)
                     handles.Control.Pitch.Notch2_wnGS = zeros(14,1);
                 end
 
-                if handles.TableSize ~= length(LinListBoxItemsIndex)
-                    handles.TableSize = length(LinListBoxItemsIndex);
-                end
                 
-                % Update the table with the pitch angles data
-                for i = 1:handles.TableSize
-                    if isnan(Lin.Pitch(LinListBoxItemsIndex(i)))
-                        TableData(i,1) = num2cell([]);
-                    else
-                        TableData(i,1) = num2cell(Lin.Pitch(LinListBoxItemsIndex(i))*180/pi);
-                    end
-                    if isnan(handles.Control.Pitch.KpGS(i))
-                        TableData(i,2) = num2cell([]);
-                    else
-                        TableData(i,2) = num2cell(handles.Control.Pitch.KpGS(i));
-                    end
-                    if isnan(handles.Control.Pitch.KiGS(i))
-                        TableData(i,3) = num2cell([]);
-                    else
-                        TableData(i,3) = num2cell(handles.Control.Pitch.KiGS(i));
-                    end
-                    if isnan(handles.Control.Pitch.Notch_beta1GS(i))
-                        TableData(i,4) = num2cell([]);
-                    else
-                        TableData(i,4) = num2cell(handles.Control.Pitch.Notch_beta1GS(i));
-                    end
-                    if isnan(handles.Control.Pitch.Notch_beta2GS(i))
-                        TableData(i,5) = num2cell([]);
-                    else
-                        TableData(i,5) = num2cell(handles.Control.Pitch.Notch_beta2GS(i));
-                    end
-                    if isnan(handles.Control.Pitch.Notch_wnGS(i))
-                        TableData(i,6) = num2cell([]);
-                    else
-                        TableData(i,6) = num2cell(handles.Control.Pitch.Notch_wnGS(i));
-                    end
-                    % --- Second notch filter
-                    if isnan(handles.Control.Pitch.Notch2_beta1GS(i))
-                        TableData(i,7) = num2cell([]);
-                    else
-                        TableData(i,7) = num2cell(handles.Control.Pitch.Notch2_beta1GS(i));
-                    end
-                    if isnan(handles.Control.Pitch.Notch2_beta2GS(i))
-                        TableData(i,8) = num2cell([]);
-                    else
-                        TableData(i,8) = num2cell(handles.Control.Pitch.Notch2_beta2GS(i));
-                    end
-                    if isnan(handles.Control.Pitch.Notch2_wnGS(i))
-                        TableData(i,9) = num2cell([]);
-                    else
-                        TableData(i,9) = num2cell(handles.Control.Pitch.Notch2_wnGS(i));
-                    end
-                    % ---
-                    if isnan(handles.Control.Pitch.LowPassCutOffFreqGS(i))
-                        TableData(i,10) = num2cell([]);
-                    else
-                        TableData(i,10) = num2cell(handles.Control.Pitch.LowPassCutOffFreqGS(i));
-                    end
-                end
+                % TODO: Fix the table updating feature or just revert to
+                % the previous method (manually updatin the table)
                 
-                set(handles.Table, 'Data', TableData);
+%                 if handles.TableSize ~= length(LinListBoxItemsIndex)
+%                     handles.TableSize = length(LinListBoxItemsIndex);
+%                 end
+%                 
+%                 % Update the table with the pitch angles data
+%                 for i = 1:handles.TableSize
+%                     if isnan(Lin.Pitch(LinListBoxItemsIndex(i)))
+%                         TableData(i,1) = num2cell([]);
+%                     else
+%                         TableData(i,1) = num2cell(Lin.Pitch(LinListBoxItemsIndex(i))*180/pi);
+%                     end
+%                     if isnan(handles.Control.Pitch.KpGS(i))
+%                         TableData(i,2) = num2cell([]);
+%                     else
+%                         TableData(i,2) = num2cell(handles.Control.Pitch.KpGS(i));
+%                     end
+%                     if isnan(handles.Control.Pitch.KiGS(i))
+%                         TableData(i,3) = num2cell([]);
+%                     else
+%                         TableData(i,3) = num2cell(handles.Control.Pitch.KiGS(i));
+%                     end
+%                     if isnan(handles.Control.Pitch.Notch_beta1GS(i))
+%                         TableData(i,4) = num2cell([]);
+%                     else
+%                         TableData(i,4) = num2cell(handles.Control.Pitch.Notch_beta1GS(i));
+%                     end
+%                     if isnan(handles.Control.Pitch.Notch_beta2GS(i))
+%                         TableData(i,5) = num2cell([]);
+%                     else
+%                         TableData(i,5) = num2cell(handles.Control.Pitch.Notch_beta2GS(i));
+%                     end
+%                     if isnan(handles.Control.Pitch.Notch_wnGS(i))
+%                         TableData(i,6) = num2cell([]);
+%                     else
+%                         TableData(i,6) = num2cell(handles.Control.Pitch.Notch_wnGS(i));
+%                     end
+%                     % --- Second notch filter
+%                     if isnan(handles.Control.Pitch.Notch2_beta1GS(i))
+%                         TableData(i,7) = num2cell([]);
+%                     else
+%                         TableData(i,7) = num2cell(handles.Control.Pitch.Notch2_beta1GS(i));
+%                     end
+%                     if isnan(handles.Control.Pitch.Notch2_beta2GS(i))
+%                         TableData(i,8) = num2cell([]);
+%                     else
+%                         TableData(i,8) = num2cell(handles.Control.Pitch.Notch2_beta2GS(i));
+%                     end
+%                     if isnan(handles.Control.Pitch.Notch2_wnGS(i))
+%                         TableData(i,9) = num2cell([]);
+%                     else
+%                         TableData(i,9) = num2cell(handles.Control.Pitch.Notch2_wnGS(i));
+%                     end
+%                     % ---
+%                     if isnan(handles.Control.Pitch.LowPassCutOffFreqGS(i))
+%                         TableData(i,10) = num2cell([]);
+%                     else
+%                         TableData(i,10) = num2cell(handles.Control.Pitch.LowPassCutOffFreqGS(i));
+%                     end
+%                 end
+                
+%                 set(handles.Table, 'Data', TableData);
                 
                 % Allow multiple pitch angle selection in listbox
                 set(handles.LinWindSpeed_listbox, 'Max', 20, 'Min', 0);
