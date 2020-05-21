@@ -26,7 +26,6 @@ handles.Tower = varargin{3};
 handles.Input = varargin;
 
 % Update input fields
-set(handles.StepWindNotice, 'Visible', 'off')
 set(handles.WindLength_textbox, 'String', num2str(handles.CertificationSettings.Wind.T));
 set(handles.WindLength_textbox, 'Enable', 'off');
 set(handles.WindWidth_textbox, 'String', num2str(handles.CertificationSettings.Wind.Ly));
@@ -37,36 +36,45 @@ set(handles.WindNz_textbox, 'String', num2str(handles.CertificationSettings.Wind
 set(handles.WindMode, 'Value', handles.CertificationSettings.Wind.Type);
 set(handles.WindClass, 'Value', handles.CertificationSettings.Wind.Class(1));
 set(handles.WindTurbulence, 'Value', handles.CertificationSettings.Wind.Class(2));
+set(handles.StartWind, 'String', handles.CertificationSettings.Wind.Step);
+set(handles.EndWind, 'String', handles.CertificationSettings.Run.WindSpeed(1));
 set(handles.StepDuration, 'String', handles.CertificationSettings.Wind.StepDuration);
 if get(handles.WindMode, 'Value') == 1       % Steady wind
     set(handles.WindEvent, 'Visible', 'off')
     set(handles.Event_label, 'Visible', 'off')
     set(handles.Event_unit, 'Visible', 'off')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
 elseif get(handles.WindMode, 'Value') == 2   % Stepped wind
-    set(handles.WindEvent, 'Visible', 'on')
+    set(handles.WindEvent, 'Visible', 'off')
+    set(handles.Event_label, 'Visible', 'off')
+    set(handles.Event_unit, 'Visible', 'off')
+    set(handles.StartWind, 'Visible', 'on')
+    set(handles.StartWind_label, 'Visible', 'on')
+    set(handles.StartWind_unit, 'Visible', 'on')
+    set(handles.EndWind, 'Visible', 'on')
+    set(handles.EndWind_label, 'Visible', 'on')
+    set(handles.EndWind_unit, 'Visible', 'on')
     set(handles.StepDuration, 'Visible', 'on')
     set(handles.StepDuration_label, 'Visible', 'on')
     set(handles.StepDuration_unit, 'Visible', 'on')
-    set(handles.WindEvent, 'String', num2str(handles.CertificationSettings.Wind.Step))
-    set(handles.Event_label, 'Visible', 'on')
-    set(handles.Event_unit, 'Visible', 'on')
-    set(handles.Event_label, 'String', 'Start at:')
-    set(handles.Event_unit, 'String', 'm/s')
-    set(handles.StepWindNotice, 'Visible', 'on')
-    U = num2str(handles.CertificationSettings.Run.WindSpeed(1));
-    if length(handles.CertificationSettings.Run.WindSpeed) > 1
-        for i = 2:length(handles.CertificationSettings.Run.WindSpeed)
-            U = [U, ', ', num2str(handles.CertificationSettings.Run.WindSpeed(i))];
-        end
-    end
-    set(handles.StepWindNotice, 'String', ['(Up to wind speed(s): ', U, ')']);
 elseif get(handles.WindMode, 'Value') == 3   % Normal wind profile (NWP)
     set(handles.WindEvent, 'Visible', 'off')
     set(handles.Event_label, 'Visible', 'off')
     set(handles.Event_unit, 'Visible', 'off')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
@@ -74,6 +82,12 @@ elseif get(handles.WindMode, 'Value') == 4   % Normal turbulence model (NTM)
     set(handles.WindEvent, 'Visible', 'off')
     set(handles.Event_label, 'Visible', 'off')
     set(handles.Event_unit, 'Visible', 'off')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
@@ -81,6 +95,12 @@ elseif get(handles.WindMode, 'Value') == 5   % Annual extreme wind speed (EWM)
     set(handles.WindEvent, 'Visible', 'off')
     set(handles.Event_label, 'Visible', 'off')
     set(handles.Event_unit, 'Visible', 'off')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
@@ -88,6 +108,12 @@ elseif get(handles.WindMode, 'Value') == 6   % 50-year extreme wind speed (EWM)
     set(handles.WindEvent, 'Visible', 'off')
     set(handles.Event_label, 'Visible', 'off')
     set(handles.Event_unit, 'Visible', 'off')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
@@ -96,7 +122,12 @@ elseif get(handles.WindMode, 'Value') == 7   % Extreme wind shear (EWS)
     set(handles.WindEvent, 'String', num2str(handles.CertificationSettings.Wind.EWS))
     set(handles.Event_label, 'Visible', 'on')
     set(handles.Event_unit, 'Visible', 'on')
-    set(handles.Event_label, 'String', 'Event at:')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
@@ -104,6 +135,12 @@ elseif get(handles.WindMode, 'Value') == 8   % Extreme turbulence model (ETM)
     set(handles.WindEvent, 'Visible', 'off')
     set(handles.Event_label, 'Visible', 'off')
     set(handles.Event_unit, 'Visible', 'off')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
@@ -112,7 +149,12 @@ elseif get(handles.WindMode, 'Value') == 9   % Extreme operating gust (EOG)
     set(handles.WindEvent, 'String', num2str(handles.CertificationSettings.Wind.EOG))
     set(handles.Event_label, 'Visible', 'on')
     set(handles.Event_unit, 'Visible', 'on')
-    set(handles.Event_label, 'String', 'Event at:')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
@@ -121,7 +163,12 @@ elseif get(handles.WindMode, 'Value') == 10   % Extreme direction change (EDC)
     set(handles.WindEvent, 'String', num2str(handles.CertificationSettings.Wind.EDC))
     set(handles.Event_label, 'Visible', 'on')
     set(handles.Event_unit, 'Visible', 'on')
-    set(handles.Event_label, 'String', 'Event at:')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
@@ -130,7 +177,12 @@ elseif get(handles.WindMode, 'Value') == 11   % Extreme coherent gust (ECG)
     set(handles.WindEvent, 'String', num2str(handles.CertificationSettings.Wind.ECG))
     set(handles.Event_label, 'Visible', 'on')
     set(handles.Event_unit, 'Visible', 'on')
-    set(handles.Event_label, 'String', 'Event at:')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
@@ -344,36 +396,54 @@ hold off
 
 %% Wind type
 function WindMode_Callback(hObject, eventdata, handles)
-set(handles.StepWindNotice, 'Visible', 'off')
 if get(hObject, 'Value') == 1       % Steady wind
     set(handles.WindEvent, 'Visible', 'off')
     set(handles.Event_label, 'Visible', 'off')
     set(handles.Event_unit, 'Visible', 'off')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
 elseif get(hObject, 'Value') == 2   % Stepped wind
-    set(handles.WindEvent, 'Visible', 'on')
-    set(handles.WindEvent, 'String', num2str(handles.CertificationSettings.Wind.Step))
-    set(handles.Event_label, 'Visible', 'on')
-    set(handles.Event_unit, 'Visible', 'on')
-    set(handles.Event_label, 'String', 'Start at:')
-    set(handles.Event_unit, 'String', 'm/s')
+    set(handles.WindEvent, 'Visible', 'off')
+    set(handles.Event_label, 'Visible', 'off')
+    set(handles.Event_unit, 'Visible', 'off')
+    set(handles.StartWind, 'Visible', 'on')
+    set(handles.StartWind_label, 'Visible', 'on')
+    set(handles.StartWind_unit, 'Visible', 'on')
+    set(handles.EndWind, 'Visible', 'on')
+    set(handles.EndWind_label, 'Visible', 'on')
+    set(handles.EndWind_unit, 'Visible', 'on')
     set(handles.StepDuration, 'Visible', 'on')
     set(handles.StepDuration_label, 'Visible', 'on')
     set(handles.StepDuration_unit, 'Visible', 'on')
-    set(handles.StepWindNotice, 'Visible', 'on')
-    U = num2str(handles.CertificationSettings.Run.WindSpeed(1));
-    if length(handles.CertificationSettings.Run.WindSpeed) > 1
-        for i = 2:length(handles.CertificationSettings.Run.WindSpeed)
-            U = [U, ', ', num2str(handles.CertificationSettings.Run.WindSpeed(i))];
-        end
+
+    handles.CertificationSettings.Run.WindSpeed = max(handles.CertificationSettings.Run.WindSpeed);
+    if handles.CertificationSettings.Run.WindSpeed <= handles.CertificationSettings.Wind.Step
+        handles.CertificationSettings.Run.WindSpeed = handles.CertificationSettings.Wind.Step + 1;
     end
-    set(handles.StepWindNotice, 'String', ['(Up to wind speed(s): ', U, ')']);
+    amountOfSteps = ceil(handles.CertificationSettings.Run.WindSpeed - handles.CertificationSettings.Wind.Step) + 1;
+    handles.CertificationSettings.Run.Time = amountOfSteps*handles.CertificationSettings.Wind.StepDuration;
+    handles.CertificationSettings.Wind.T = handles.CertificationSettings.Run.Time;
+    set(handles.WindLength_textbox, 'String', num2str(handles.CertificationSettings.Wind.T));
+    set(handles.StartWind, 'String', handles.CertificationSettings.Wind.Step);
+    set(handles.EndWind, 'String', handles.CertificationSettings.Run.WindSpeed);
+    set(handles.StepDuration, 'String', handles.CertificationSettings.Wind.StepDuration);
 elseif get(hObject, 'Value') == 3   % Normal wind profile (NWP)
     set(handles.WindEvent, 'Visible', 'off')
     set(handles.Event_label, 'Visible', 'off')
     set(handles.Event_unit, 'Visible', 'off')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
@@ -381,6 +451,12 @@ elseif get(hObject, 'Value') == 4   % Normal turbulence model (NTM)
     set(handles.WindEvent, 'Visible', 'off')
     set(handles.Event_label, 'Visible', 'off')
     set(handles.Event_unit, 'Visible', 'off')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
@@ -388,6 +464,12 @@ elseif get(hObject, 'Value') == 5   % Annual extreme wind speed (EWM)
     set(handles.WindEvent, 'Visible', 'off')
     set(handles.Event_label, 'Visible', 'off')
     set(handles.Event_unit, 'Visible', 'off')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
@@ -395,6 +477,12 @@ elseif get(hObject, 'Value') == 6   % 50-year extreme wind speed (EWM)
     set(handles.WindEvent, 'Visible', 'off')
     set(handles.Event_label, 'Visible', 'off')
     set(handles.Event_unit, 'Visible', 'off')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
@@ -403,8 +491,12 @@ elseif get(hObject, 'Value') == 7   % Extreme wind shear (EWS)
     set(handles.WindEvent, 'String', num2str(handles.CertificationSettings.Wind.EWS))
     set(handles.Event_label, 'Visible', 'on')
     set(handles.Event_unit, 'Visible', 'on')
-    set(handles.Event_label, 'String', 'Event at:')
-    set(handles.Event_unit, 'String', 's')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
@@ -412,6 +504,12 @@ elseif get(hObject, 'Value') == 8   % Extreme turbulence model (ETM)
     set(handles.WindEvent, 'Visible', 'off')
     set(handles.Event_label, 'Visible', 'off')
     set(handles.Event_unit, 'Visible', 'off')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
@@ -420,8 +518,12 @@ elseif get(hObject, 'Value') == 9   % Extreme operating gust (EOG)
     set(handles.WindEvent, 'String', num2str(handles.CertificationSettings.Wind.EOG))
     set(handles.Event_label, 'Visible', 'on')
     set(handles.Event_unit, 'Visible', 'on')
-    set(handles.Event_label, 'String', 'Event at:')
-    set(handles.Event_unit, 'String', 's')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
@@ -430,8 +532,12 @@ elseif get(hObject, 'Value') == 10   % Extreme direction change (EDC)
     set(handles.WindEvent, 'String', num2str(handles.CertificationSettings.Wind.EDC))
     set(handles.Event_label, 'Visible', 'on')
     set(handles.Event_unit, 'Visible', 'on')
-    set(handles.Event_label, 'String', 'Event at:')
-    set(handles.Event_unit, 'String', 's')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
@@ -440,13 +546,20 @@ elseif get(hObject, 'Value') == 11   % Extreme coherent gust (ECG)
     set(handles.WindEvent, 'String', num2str(handles.CertificationSettings.Wind.ECG))
     set(handles.Event_label, 'Visible', 'on')
     set(handles.Event_unit, 'Visible', 'on')
-    set(handles.Event_label, 'String', 'Event at:')
-    set(handles.Event_unit, 'String', 's')
+    set(handles.StartWind, 'Visible', 'off')
+    set(handles.StartWind_label, 'Visible', 'off')
+    set(handles.StartWind_unit, 'Visible', 'off')
+    set(handles.EndWind, 'Visible', 'off')
+    set(handles.EndWind_label, 'Visible', 'off')
+    set(handles.EndWind_unit, 'Visible', 'off')
     set(handles.StepDuration, 'Visible', 'off')
     set(handles.StepDuration_label, 'Visible', 'off')
     set(handles.StepDuration_unit, 'Visible', 'off')
 end
 DrawWind(handles)
+
+guidata(hObject, handles); 
+
 function WindMode_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
@@ -470,9 +583,7 @@ end
 
 %% Event time stamp - text box
 function WindEvent_Callback(hObject, eventdata, handles)
-if get(handles.WindMode, 'Value') == 2   % Stepped wind
-    event = handles.CertificationSettings.Wind.Step;
-elseif get(handles.WindMode, 'Value') == 7   % Extreme wind shear (EWS)
+if get(handles.WindMode, 'Value') == 7   % Extreme wind shear (EWS)
     event = handles.CertificationSettings.Wind.EWS;
 elseif get(handles.WindMode, 'Value') == 9   % Extreme operating gust (EOG)
     event = handles.CertificationSettings.Wind.EOG;
@@ -486,9 +597,8 @@ if str2double(get(hObject,'String')) < 0
 elseif isnan(str2double(get(hObject,'String')))
     set(hObject, 'String', num2str(event))
 end
-if get(handles.WindMode, 'Value') == 2   % Stepped wind
-    handles.CertificationSettings.Wind.Step = str2double(get(hObject,'String'));
-elseif get(handles.WindMode, 'Value') == 7   % Extreme wind shear (EWS)
+
+if get(handles.WindMode, 'Value') == 7   % Extreme wind shear (EWS)
     handles.CertificationSettings.Wind.EWS = str2double(get(hObject,'String'));
 elseif get(handles.WindMode, 'Value') == 9   % Extreme operating gust (EOG)
     handles.CertificationSettings.Wind.EOG = str2double(get(hObject,'String'));
@@ -811,12 +921,53 @@ xlabel('t [s]')
 ylabel('u [m/s]')
 
 
+function StartWind_Callback(hObject, eventdata, handles)
+handles.CertificationSettings.Wind.Step = str2double(get(hObject,'String'));
+
+amountOfSteps = ceil(handles.CertificationSettings.Run.WindSpeed - handles.CertificationSettings.Wind.Step) + 1;
+handles.CertificationSettings.Run.Time = amountOfSteps*handles.CertificationSettings.Wind.StepDuration;
+handles.CertificationSettings.Wind.T = handles.CertificationSettings.Run.Time;
+set(handles.WindLength_textbox, 'String', num2str(handles.CertificationSettings.Wind.T));
+
+DrawWind(handles)
+
+guidata(hObject, handles); 
+
+
+% --- Executes during object creation, after setting all properties.
+function StartWind_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function EndWind_Callback(hObject, eventdata, handles)
+handles.CertificationSettings.Run.WindSpeed = str2double(get(hObject,'String'));
+
+amountOfSteps = ceil(handles.CertificationSettings.Run.WindSpeed - handles.CertificationSettings.Wind.Step) + 1;
+handles.CertificationSettings.Run.Time = amountOfSteps*handles.CertificationSettings.Wind.StepDuration;
+handles.CertificationSettings.Wind.T = handles.CertificationSettings.Run.Time;
+set(handles.WindLength_textbox, 'String', num2str(handles.CertificationSettings.Wind.T));
+
+DrawWind(handles)
+
+guidata(hObject, handles); 
+
+
+% --- Executes during object creation, after setting all properties.
+function EndWind_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
 
 function StepDuration_Callback(hObject, eventdata, handles)
 handles.CertificationSettings.Wind.StepDuration = str2double(get(hObject,'String'));
 
-amountOfSteps = ceil(handles.CertificationSettings.Run.WindSpeed(1) - str2double(get(handles.WindEvent, 'String'))) + 1;
-handles.CertificationSettings.Run.Time = amountOfSteps*str2double(get(hObject,'String'));
+amountOfSteps = ceil(handles.CertificationSettings.Run.WindSpeed - handles.CertificationSettings.Wind.Step) + 1;
+handles.CertificationSettings.Run.Time = amountOfSteps*handles.CertificationSettings.Wind.StepDuration;
+handles.CertificationSettings.Wind.T = handles.CertificationSettings.Run.Time;
+set(handles.WindLength_textbox, 'String', num2str(handles.CertificationSettings.Wind.T));
 
 DrawWind(handles)
 
@@ -825,12 +976,7 @@ guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function StepDuration_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to StepDuration (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
