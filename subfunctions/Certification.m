@@ -36,13 +36,13 @@ handles.Drivetrain = varargin{5};
 handles.Control = varargin{6};
 handles.CertificationSettings = varargin{7};
 
-% Adjust simulation time if a stepped wind is requested
+% Disable simulation time and wind speed if a stepped wind is requested
 if handles.CertificationSettings.Wind.Type == 2
-    amountOfSteps = ceil(handles.CertificationSettings.Run.WindSpeed(1) - handles.CertificationSettings.Wind.Step) + 1;
-    handles.CertificationSettings.Run.Time = amountOfSteps*handles.CertificationSettings.Wind.StepDuration;
     set(handles.Runtime_textbox, 'Enable', 'off');
+    set(handles.WindSpeed_textbox, 'Enable', 'off');
 else
     set(handles.Runtime_textbox, 'Enable', 'on');
+    set(handles.WindSpeed_textbox, 'Enable', 'on');
 end
 
 % Update input fields
@@ -177,6 +177,17 @@ for i = 1:length(buttons)
     set(buttons(i), 'Enable', 'on');
 end
 
+% Disable simulation time and wind speed if a stepped wind is requested
+if handles.CertificationSettings.Wind.Type == 2
+    set(handles.Runtime_textbox, 'Enable', 'off');
+    set(handles.WindSpeed_textbox, 'Enable', 'off');
+    set(handles.Runtime_textbox, 'String', handles.CertificationSettings.Run.Time);
+    set(handles.WindSpeed_textbox, 'String', handles.CertificationSettings.Run.WindSpeed(1));
+else
+    set(handles.Runtime_textbox, 'Enable', 'on');
+    set(handles.WindSpeed_textbox, 'Enable', 'on');
+end
+
 % Disable start button
 if isempty(handles.OutputFile)
     set(handles.Start, 'Enable', 'off')
@@ -218,16 +229,6 @@ elseif handles.CertificationSettings.Wind.Type == 11   % Extreme coherent gust (
     set(hObject, 'TooltipString', 'Extreme coherent gust (ECD)')
 end
 
-% Adjust simulation time if a stepped wind is requested
-if handles.CertificationSettings.Wind.Type == 2
-    amountOfSteps = ceil(handles.CertificationSettings.Run.WindSpeed(1) - handles.CertificationSettings.Wind.Step) + 1;
-    handles.CertificationSettings.Run.Time = amountOfSteps*handles.CertificationSettings.Wind.StepDuration;
-    set(handles.Runtime_textbox, 'Enable', 'off');
-    set(handles.Runtime_textbox, 'String', handles.CertificationSettings.Run.Time);
-else
-    set(handles.Runtime_textbox, 'Enable', 'on');
-end
-
 % Update handles structure
 guidata(hObject, handles);
 
@@ -247,6 +248,15 @@ handles.CertificationSettings = Operation(...
 % Enable window
 for i = 1:length(buttons)
     set(buttons(i), 'Enable', 'on');
+end
+
+% Disable simulation time and wind speed if a stepped wind is requested
+if handles.CertificationSettings.Wind.Type == 2
+    set(handles.Runtime_textbox, 'Enable', 'off');
+    set(handles.WindSpeed_textbox, 'Enable', 'off');
+else
+    set(handles.Runtime_textbox, 'Enable', 'on');
+    set(handles.WindSpeed_textbox, 'Enable', 'on');
 end
 
 % Disable start button
@@ -340,6 +350,7 @@ end
 handles.CertificationSettings.Run.Seeds = ceil(str2double(get(hObject,'String')));
 guidata(hObject, handles);
 UpdateOutputName(handles);
+
 function NSeeds_textbox_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
@@ -355,6 +366,7 @@ end
 handles.CertificationSettings.Run.Time = str2double(get(hObject,'String'));
 handles.CertificationSettings.Wind.T = handles.CertificationSettings.Run.Time;
 guidata(hObject, handles);
+
 function Runtime_textbox_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
@@ -617,6 +629,15 @@ end
 % Enable window
 for i = 1:length(buttons)
     set(buttons(i), 'Enable', 'on');
+end
+
+% Disable simulation time and wind speed if a stepped wind is requested
+if handles.CertificationSettings.Wind.Type == 2
+    set(handles.Runtime_textbox, 'Enable', 'off');
+    set(handles.WindSpeed_textbox, 'Enable', 'off');
+else
+    set(handles.Runtime_textbox, 'Enable', 'on');
+    set(handles.WindSpeed_textbox, 'Enable', 'on');
 end
 
 % Turn on warnings
