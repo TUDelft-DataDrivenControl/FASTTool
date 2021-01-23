@@ -14,4 +14,4 @@ end
 [~,~] = system(['icacls subfunctions' filesep 'inputfiles /remove:d Everyone']);
 
 % FASTTool for the course AE4W09 - Wind Turbine Design
-run('WindTurbineDesign.m');
+WindTurbineDesign_App
