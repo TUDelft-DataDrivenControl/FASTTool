@@ -2421,6 +2421,19 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+%% Air density text box
+function AirDensity_textbox_Callback(hObject, eventdata, handles)
+if isnan(str2double(get(hObject, 'String')))
+    set(hObject, 'String', num2str(handles.AirDensity));
+else
+    handles.AirDensity = str2double(get(hObject, 'String'));
+end
+guidata(hObject, handles);
+function AirDensity_textbox_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
 %% Wind streaks - check box
 function Streaks_Callback(hObject, eventdata, handles)
 
@@ -3044,3 +3057,4 @@ end
 
 % Update handles structure
 guidata(hObject, handles);
+
