@@ -35,6 +35,7 @@ handles.Nacelle = varargin{4};
 handles.Drivetrain = varargin{5};
 handles.Control = varargin{6};
 handles.CertificationSettings = varargin{7};
+handles.AirDensity = varargin{8};
 
 % Disable simulation time and wind speed if a stepped wind is requested
 if handles.CertificationSettings.Wind.Type == 2
@@ -478,6 +479,7 @@ Nacelle = handles.Nacelle;
 Drivetrain = handles.Drivetrain;
 Control = handles.Control;
 CertificationSettings = handles.CertificationSettings;
+AirDensity = handles.AirDensity;
 TMax = CertificationSettings.Run.Time;
 T = CertificationSettings.Wind.T;
 Ly = CertificationSettings.Wind.Ly;
@@ -519,11 +521,11 @@ Blade.Edge2_coeff = y22_coeff;
 % Steady state curves
 disp('Determining steady state rotational speeds and pitch angles...')
 if CertificationSettings.Wind.Type == 2
-    [~, ~, OmegaU, PitchAngle] = SteadyState(Blade, Airfoil, Drivetrain, Control, CertificationSettings.Wind.Step);
+    [~, ~, OmegaU, PitchAngle] = SteadyState(Blade, Airfoil, Drivetrain, Control, CertificationSettings.Wind.Step, AirDensity);
     OmegaU = OmegaU*ones(length(CertificationSettings.Run.WindSpeed));
     PitchAngle = PitchAngle*ones(length(CertificationSettings.Run.WindSpeed));
 else
-    [~, ~, OmegaU, PitchAngle] = SteadyState(Blade, Airfoil, Drivetrain, Control, CertificationSettings.Run.WindSpeed);
+    [~, ~, OmegaU, PitchAngle] = SteadyState(Blade, Airfoil, Drivetrain, Control, CertificationSettings.Run.WindSpeed, AirDensity);
 end
 RPM = OmegaU * 60/(2*pi);
 
@@ -535,7 +537,7 @@ assignin('base', 'Control', Control)
 % Turbine input files
 TMax = CertificationSettings.Run.Time;
 FASTinput(Control.DT, TMax);
-AeroDyn(Blade,Airfoil,Tower,string(CertificationSettings.Mode.Type));
+AeroDyn(Blade,Airfoil,Tower,string(CertificationSettings.Mode.Type), AirDensity);
 
 % Send to base workspace and make structures available for Simulink and run the simulation
 assignin('base', 'FAST_InputFileName', [pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'FAST.fst']);
