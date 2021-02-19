@@ -160,6 +160,9 @@ if FileName
     handles.Drivetrain = Drivetrain;
     handles.Control = Control;
     handles.CertificationSettings = CertificationSettings;
+    
+    % Store air density in handles
+    handles.AirDensity = AirDensity;
 
     % Set turbine appearance
     set(handles.Landscape, 'Value', Appearance(1));
@@ -169,6 +172,9 @@ if FileName
     set(handles.TowerColor, 'Value', Appearance(5));
     handles.BladePaint = handles.ColorArray(Appearance(3),:);
     handles.TowerPaint = handles.ColorArray(Appearance(5),:);
+    
+    % Set air density textbox
+    set(handles.AirDensity_textbox, 'String', handles.AirDensity);
     
     % Enable window
     buttons = findall(handles.WindTurbineDesign, 'Type', 'UIControl');
@@ -200,7 +206,7 @@ if FileName
     Title = ['FASTTool - ', FileName];
     set(handles.WindTurbineDesign, 'Name', Title)
     
-    % Get turbine geometry from handles
+    % Get turbine and environmental properties from handles
     Blade = handles.Blade;
     Airfoil = handles.Airfoil;
     Tower = handles.Tower;
@@ -208,7 +214,8 @@ if FileName
     Drivetrain = handles.Drivetrain;
     Control = handles.Control;
     CertificationSettings = handles.CertificationSettings;
-
+    AirDensity = handles.AirDensity;
+    
     % Get turbine appearance
     Appearance = [...
         get(handles.Landscape, 'Value');
@@ -226,7 +233,8 @@ if FileName
         'Drivetrain', ...
         'Control', ...
         'Appearance', ...
-        'CertificationSettings')
+        'CertificationSettings',...
+        'AirDensity');
 
 end
 
@@ -252,7 +260,8 @@ SummaryInfo(...
     handles.Tower, ...
     handles.Nacelle, ...
     handles.Drivetrain, ...
-    handles.Control)
+    handles.Control,...
+    handles.AirDensity);
 
 % Enable window
 for i = 1:length(buttons)
