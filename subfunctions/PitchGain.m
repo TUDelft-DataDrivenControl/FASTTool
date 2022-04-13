@@ -621,11 +621,11 @@ function BodePlot(handles, undock, exportData)
         legendMargins = cell(length(handles.SelectedListboxContents), 12);
         legendMargins(:,1) = {' GM: '};
         legendMargins(:,3) = {' [dB] '};
-        legendMargins(:,4) = {' \omega_{gc}: '};
+        legendMargins(:,4) = {' \omega_{pc}: '};
         legendMargins(:,6) = {' [rad/s] '};
         legendMargins(:,7) = {' PM: '};
         legendMargins(:,9) = {' [deg] '};
-        legendMargins(:,10) = {' \omega_{pc}: '};
+        legendMargins(:,10) = {' \omega_{gc}: '};
         legendMargins(:,12) = {' [rad/s] '}; 
         
         for i = 1:length(handles.SelectedListboxContents)    
