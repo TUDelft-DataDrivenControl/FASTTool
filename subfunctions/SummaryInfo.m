@@ -133,7 +133,10 @@ end
 Prated = Control.Torque.SpeedC*(2*pi/60) *  Control.Torque.Demanded * Drivetrain.Generator.Efficiency;
 
 % Drive train
-SpeedRange = [Control.Torque.SpeedB, Control.Torque.SpeedC]/Drivetrain.Gearbox.Ratio;
+disp('Searching for cut-in rotational speed at')
+[~, ~, OmegaU, ~] = SteadyState(Blade, Airfoil, Drivetrain, Control, Control.WindSpeed.Cutin, AirDensity);
+MinSpeedRPM = OmegaU * 60/(2*pi);
+SpeedRange = [MinSpeedRPM, Control.Torque.SpeedC/Drivetrain.Gearbox.Ratio];
 if Drivetrain.Gearbox.Ratio == 1
     DrivetrainType = 'Direct drive system';
 else
