@@ -26,6 +26,7 @@ handles.Tower = varargin{3};
 handles.Nacelle = varargin{4};
 handles.Control = varargin{5};
 handles.Drivetrain = varargin{6};
+handles.AirDensity = varargin{7};
 
 % Propose values for the wind speed range
 set(handles.WindSpeed_From, 'String', int2str(ceil(handles.Control.WindSpeed.Cutin)))
@@ -71,6 +72,7 @@ Blade = handles.Blade;
 Airfoil = handles.Airfoil;
 Drivetrain = handles.Drivetrain;
 Control = handles.Control;
+AirDensity = handles.AirDensity;
 
 % Find rated wind speed by comparing demanded torque at rotational speed C
 disp('Searching for rated wind speed...')
@@ -91,7 +93,7 @@ else
     for iter = 1:100
         U_new = U1 + abs((Control.Torque.Demanded-Qr1)/(Qr1-Qr2))*(U2-U1);
         [~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, (OmegaC/Drivetrain.Gearbox.Ratio)*Blade.Radius(end)/U_new);
-        Qr_new = 0.5*CQr*1.225*U_new^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+        Qr_new = 0.5*CQr*AirDensity*U_new^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
         if abs((Qr_new - Control.Torque.Demanded)/Control.Torque.Demanded) < 0.005
             success = true;
             break
@@ -167,6 +169,7 @@ Tower = handles.Tower;
 Nacelle = handles.Nacelle;
 Control = handles.Control;
 Drivetrain = handles.Drivetrain;
+AirDensity = handles.AirDensity;
 
 % Run modal analysis for 0 rpm
 disp('Finding non-rotating mode shapes...')
@@ -199,7 +202,7 @@ Blade.Edge2_coeff = y22_coeff;
 
 % Steady state curves
 disp('Determining steady state rotational speeds and pitch angles...')
-[~, ~, OmegaU, PitchAngle] = SteadyState(Blade, Airfoil, Drivetrain, Control, WindSpeeds);
+[~, ~, OmegaU, PitchAngle] = SteadyState(Blade, Airfoil, Drivetrain, Control, WindSpeeds, AirDensity);
 RPM = OmegaU * 60/(2*pi);
 
 % Avoid some common errors with linearization
@@ -224,7 +227,7 @@ disp('Writing input files...')
 FAST_InputFileName = [pwd, filesep 'subfunctions' filesep 'inputfiles' filesep 'FAST.fst'];
 
 % Turbine input files
-AeroDyn(Blade,Airfoil,Tower,LinMode);
+AeroDyn(Blade,Airfoil,Tower,LinMode,AirDensity);
 ServoDyn(Drivetrain,Control,LinMode);
 
 % Preload the OutList
@@ -304,11 +307,10 @@ function Q = CalculateAerodynamicTorque(handles, CQr, windSpeed)
     % Set input
     Blade = handles.Blade;
     Drivetrain = handles.Drivetrain;    
-
-    rhoAir = 1.225; % Density of air [kg/m3]
+    AirDensity = handles.AirDensity;
     
     % Calculate aerodynamic torque
-    Q = 0.5*CQr*rhoAir*windSpeed^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+    Q = 0.5*CQr*AirDensity*windSpeed^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
 
 %% Wind speed steps
 function WindSpeed_From_Callback(hObject, eventdata, handles)

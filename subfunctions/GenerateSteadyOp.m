@@ -28,6 +28,7 @@ handles.Blade = varargin{1};
 handles.Airfoil = varargin{2};
 handles.Drivetrain = varargin{3};
 handles.Control = varargin{4};
+handles.AirDensity = varargin{5};
 
 % Propose values for the pitch angle range
 set(handles.PitchAngle_From, 'String', '0')
@@ -97,11 +98,12 @@ for j = 1:length(buttons)
 end
 pause(0.1)
 
-% Get geometry from handles
+% Get geometry and air density from handles
 Blade = handles.Blade;
 Airfoil = handles.Airfoil;
 Drivetrain = handles.Drivetrain;
 Control = handles.Control;
+AirDensity = handles.AirDensity;
 
 Pitchi = [];
 if get(handles.CalcPerformanceFine_checkbox, 'Value') == 1
@@ -191,16 +193,16 @@ else
     disp('Generating steady operating curves...')
     
     % Determine steady state curves (external function, which is also used in 'Linearization.m'
-    [CT, CQ, OmegaU, PitchAngle] = SteadyState(Blade, Airfoil, Drivetrain, Control, U);
+    [CT, CQ, OmegaU, PitchAngle] = SteadyState(Blade, Airfoil, Drivetrain, Control, U, AirDensity);
 
     TSR = OmegaU.*Blade.Radius(end)./U;
     CP = CQ.*TSR;
     TSR(1) = 0;
     CP(1) = 0;
 
-    P = 0.5*1.225*pi*Blade.Radius(end)^2 * U.^3 .* CP .* Drivetrain.Gearbox.Efficiency .* Drivetrain.Generator.Efficiency;
-    T = 0.5*1.225*pi*Blade.Radius(end)^2 * U.^2 .* CT;
-    Q = 0.5*1.225*pi*Blade.Radius(end)^3 * U.^2 .* CQ;
+    P = 0.5*AirDensity*pi*Blade.Radius(end)^2 * U.^3 .* CP .* Drivetrain.Gearbox.Efficiency .* Drivetrain.Generator.Efficiency;
+    T = 0.5*AirDensity*pi*Blade.Radius(end)^2 * U.^2 .* CT;
+    Q = 0.5*AirDensity*pi*Blade.Radius(end)^3 * U.^2 .* CQ;
     RPM = OmegaU * 60/(2*pi);
 
     Prated = max(P);

@@ -109,15 +109,16 @@ function varargout = WindTurbineDesign_OutputFcn(hObject, eventdata, handles)
 %% Info button
 function Info_Callback(hObject, eventdata, handles)
 info = [...
-    'FASTTool v1.3 (July 2019) \n', ...
+    'FASTTool v1.4 (February 2021) \n', ...
     'For the course AE4W09\n', ...
     '\n', ...
-    'Works on Windows with Matlab R2018b (v9.1) and above \n', ...
-    'Designed for FAST v8.16', ...
+    'Works on Windows with Matlab R2018b (v9.1) and above. \n', ...
+    'Designed for FAST v8.16.', ...
     '\n', ...
-    'Course instructor: Michiel Zaaijer (M.B.Zaayer@tudelft.nl) \n', ...
+    'Course instructors: Michiel Zaaijer (M.B.Zaayer@tudelft.nl) and Dominic von Terzi (D.A.vonTerzi@tudelft.nl) \n', ...
     'GUI created by: Rene Bos and Michiel Zaaijer \n', ...
-    'Simulink integration: Sebastiaan Mulders (S.P.Mulders@tudelft.nl) and Jan-Willem van Wingerden (J.W.vanWingerden@tudelft.nl)'];
+    'Simulink integration: Atindriyo K. Pamososuryo (A.K.Pamososuryo@tudelft.nl) and Jan-Willem van Wingerden (J.W.vanWingerden@tudelft.nl) \n',...
+    'Previous contributors: Sebastiaan P. Mulders & Sachin Navalkar.'];
 helpdlg(sprintf(info), 'Info')
 
 %% Open turbine
@@ -160,6 +161,9 @@ if FileName
     handles.Drivetrain = Drivetrain;
     handles.Control = Control;
     handles.CertificationSettings = CertificationSettings;
+    
+    % Store air density in handles
+    handles.AirDensity = AirDensity;
 
     % Set turbine appearance
     set(handles.Landscape, 'Value', Appearance(1));
@@ -169,6 +173,9 @@ if FileName
     set(handles.TowerColor, 'Value', Appearance(5));
     handles.BladePaint = handles.ColorArray(Appearance(3),:);
     handles.TowerPaint = handles.ColorArray(Appearance(5),:);
+    
+    % Set air density textbox
+    set(handles.AirDensity_textbox, 'String', handles.AirDensity);
     
     % Enable window
     buttons = findall(handles.WindTurbineDesign, 'Type', 'UIControl');
@@ -200,7 +207,7 @@ if FileName
     Title = ['FASTTool - ', FileName];
     set(handles.WindTurbineDesign, 'Name', Title)
     
-    % Get turbine geometry from handles
+    % Get turbine and environmental properties from handles
     Blade = handles.Blade;
     Airfoil = handles.Airfoil;
     Tower = handles.Tower;
@@ -208,7 +215,8 @@ if FileName
     Drivetrain = handles.Drivetrain;
     Control = handles.Control;
     CertificationSettings = handles.CertificationSettings;
-
+    AirDensity = handles.AirDensity;
+    
     % Get turbine appearance
     Appearance = [...
         get(handles.Landscape, 'Value');
@@ -226,7 +234,8 @@ if FileName
         'Drivetrain', ...
         'Control', ...
         'Appearance', ...
-        'CertificationSettings')
+        'CertificationSettings',...
+        'AirDensity');
 
 end
 
@@ -252,7 +261,8 @@ SummaryInfo(...
     handles.Tower, ...
     handles.Nacelle, ...
     handles.Drivetrain, ...
-    handles.Control)
+    handles.Control,...
+    handles.AirDensity);
 
 % Enable window
 for i = 1:length(buttons)
@@ -2421,6 +2431,19 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+%% Air density text box
+function AirDensity_textbox_Callback(hObject, eventdata, handles)
+if isnan(str2double(get(hObject, 'String')))
+    set(hObject, 'String', num2str(handles.AirDensity));
+else
+    handles.AirDensity = str2double(get(hObject, 'String'));
+end
+guidata(hObject, handles);
+function AirDensity_textbox_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
 %% Wind streaks - check box
 function Streaks_Callback(hObject, eventdata, handles)
 
@@ -2937,7 +2960,8 @@ GenerateSteadyOp(...
     handles.Blade, ...
     handles.Airfoil, ...
     handles.Drivetrain, ...
-    handles.Control);
+    handles.Control,...
+    handles.AirDensity);
 
 % Enable window
 for i = 1:length(buttons)
@@ -3002,7 +3026,8 @@ Linearization(...
     handles.Tower, ...
     handles.Nacelle, ...
     handles.Control, ...
-    handles.Drivetrain);
+    handles.Drivetrain,...
+    handles.AirDensity);
 
 % Enable window
 for i = 1:length(buttons)
@@ -3035,7 +3060,8 @@ handles.CertificationSettings = Certification(...
     handles.Nacelle, ...
     handles.Drivetrain, ...
     handles.Control, ...
-    handles.CertificationSettings);
+    handles.CertificationSettings,...
+    handles.AirDensity);
 
 % Enable window
 for i = 1:length(buttons)
@@ -3044,3 +3070,4 @@ end
 
 % Update handles structure
 guidata(hObject, handles);
+

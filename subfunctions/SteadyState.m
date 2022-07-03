@@ -1,4 +1,4 @@
-function [CT, CQ, OmegaU, PitchAngle] = SteadyState(Blade, Airfoil, Drivetrain, Control, U)
+function [CT, CQ, OmegaU, PitchAngle] = SteadyState(Blade, Airfoil, Drivetrain, Control, U, AirDensity)
 % Initialise parameters
 OmegaU = zeros(size(U));
 PitchAngle = zeros(size(U));
@@ -24,9 +24,9 @@ for i = 1:length(U)
     
         % Update rotor torque curve points to new wind speed
         [~, CQr] = PerformanceCoefficients(Blade, Airfoil, Beta(1), (Omega(1)/Drivetrain.Gearbox.Ratio)*Blade.Radius(end)/U(i));
-        Qr(1) = 0.5*CQr*1.225*U(i)^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+        Qr(1) = 0.5*CQr*AirDensity*U(i)^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
         [~, CQr] = PerformanceCoefficients(Blade, Airfoil, Beta(2), (Omega(2)/Drivetrain.Gearbox.Ratio)*Blade.Radius(end)/U(i));
-        Qr(2) = 0.5*CQr*1.225*U(i)^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+        Qr(2) = 0.5*CQr*AirDensity*U(i)^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
 
         % Move test section along control curve until control and rotor torque
         % cross or until end of control curve is reached
@@ -51,7 +51,7 @@ for i = 1:length(U)
 
             % Determine torque from rotor performance
             [~, CQr] = PerformanceCoefficients(Blade, Airfoil, Beta(2), (Omega(2)/Drivetrain.Gearbox.Ratio)*Blade.Radius(end)/U(i));
-            Qr(2) = 0.5*CQr*1.225*U(i)^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+            Qr(2) = 0.5*CQr*AirDensity*U(i)^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
         end
 
         if strcmp(Region, 'lin') % Operation linear transition section of partial load control region
@@ -78,7 +78,7 @@ for i = 1:length(U)
                 QcCross = Qc(1) + (OmegaCross-Omega(1))*(Qc(2)-Qc(1))/(Omega(2)-Omega(1));
                 % Determine torque from rotor performance
                 [CTr, CQr] = PerformanceCoefficients(Blade, Airfoil, Beta(2), (OmegaCross/Drivetrain.Gearbox.Ratio)*Blade.Radius(end)/U(i));
-                QrCross = 0.5*CQr*1.225*U(i)^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+                QrCross = 0.5*CQr*AirDensity*U(i)^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
                 Diff = (QrCross - QcCross)/Control.Torque.Demanded;
 
                 if abs(Diff) < Tolerance
@@ -124,7 +124,7 @@ for i = 1:length(U)
                     
                     % Determine torque from rotor performance
                     [CTr, CQr] = PerformanceCoefficients(Blade, Airfoil, Beta(2), (OmegaCross/Drivetrain.Gearbox.Ratio)*Blade.Radius(end)/U(i));
-                    QrCross = 0.5*CQr*1.225*U(i)^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+                    QrCross = 0.5*CQr*AirDensity*U(i)^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
                     Diff = (QrCross - QcCross)/Control.Torque.Demanded;
 
                     if abs(Diff) < Tolerance
@@ -172,7 +172,7 @@ for i = 1:length(U)
 
                 % Determine torque from rotor performance
                 [~, CQr] = PerformanceCoefficients(Blade, Airfoil, Beta(2), TSRFull);
-                Qr(2) = 0.5*CQr*1.225*U(i)^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+                Qr(2) = 0.5*CQr*AirDensity*U(i)^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
 
             end
 
@@ -192,7 +192,7 @@ for i = 1:length(U)
             Beta(2) = Beta(1)+2;
             % Determine torque from rotor performance
             [~, CQr] = PerformanceCoefficients(Blade, Airfoil, Beta(2), TSRFull);
-            Qr(2) = 0.5*CQr*1.225*U(i)^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+            Qr(2) = 0.5*CQr*AirDensity*U(i)^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
             success = false;
 
             for iter = 1:20
@@ -201,7 +201,7 @@ for i = 1:length(U)
 
                 Beta(2) = interp1(Qr, Beta, Control.Torque.Demanded, 'linear', 'extrap');
                 [CTr, CQr] = PerformanceCoefficients(Blade, Airfoil, Beta(2), TSRFull);
-                Qr(2) = 0.5*CQr*1.225*U(i)^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+                Qr(2) = 0.5*CQr*AirDensity*U(i)^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
                 
                 Diff = (Qr(2) - Control.Torque.Demanded)/Control.Torque.Demanded;
                 if abs(Diff) < Tolerance
@@ -215,7 +215,7 @@ for i = 1:length(U)
 
             OmegaU(i) = OmegaC/Drivetrain.Gearbox.Ratio;
             PitchAngle(i) = Beta(2);
-            CQ(i) = Control.Torque.Demanded/(0.5*1.225*U(i)^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio);
+            CQ(i) = Control.Torque.Demanded/(0.5*AirDensity*U(i)^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio);
             CT(i) = CTr;
 %}
         end

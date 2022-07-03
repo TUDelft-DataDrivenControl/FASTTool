@@ -1,4 +1,4 @@
-function AeroDyn(Blade,Airfoil,Tower,mode)
+function AeroDyn(Blade,Airfoil,Tower,mode,AirDensity)
 
 if contains(mode,'Linearize')
     AFAeroMod = 1;
@@ -22,7 +22,7 @@ fprintf(fid, 'False          TwrShadow          – Calculate tower influence on w
 fprintf(fid, 'False           TwrAero            - Calculate tower aerodynamic loads? (flag)\n');
 fprintf(fid, 'False          FrozenWake         - Assume frozen wake during linearization? (flag) [used only when WakeMod=1 and when linearizing]\n');
 fprintf(fid, '======  Environmental Conditions  ===================================================================\n');
-fprintf(fid, '      1.225   AirDens            - Air density (kg/m^3)\n');
+fprintf(fid, '      %4.3f   AirDens            - Air density (kg/m^3)\n', AirDensity);
 fprintf(fid, '  1.464E-05   KinVisc            - Kinematic air viscosity (m^2/s)\n');
 fprintf(fid, '        335   SpdSound           - Speed of sound (m/s)\n');
 fprintf(fid, '======  Blade-Element/Momentum Theory Options  ====================================================== [used only when WakeMod=1]\n');

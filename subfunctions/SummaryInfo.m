@@ -27,6 +27,7 @@ Tower = varargin{3};
 Nacelle = varargin{4};
 Drivetrain = varargin{5};
 Control = varargin{6};
+AirDensity = varargin{7};
 
 % Find rated wind speed by comparing demanded torque at rotational speed C
 disp('Searching for rated wind speed...')
@@ -34,9 +35,9 @@ OmegaC = Control.Torque.SpeedC*2*pi/60;
 U1 = Control.WindSpeed.Cutin;
 U2 = Control.WindSpeed.Cutout;
 [~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, (OmegaC/Drivetrain.Gearbox.Ratio)*Blade.Radius(end)/U1);
-Qr1 = 0.5*CQr*1.225*U1^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+Qr1 = 0.5*CQr*AirDensity*U1^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
 [~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, (OmegaC/Drivetrain.Gearbox.Ratio)*Blade.Radius(end)/U2);
-Qr2 = 0.5*CQr*1.225*U2^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+Qr2 = 0.5*CQr*AirDensity*U2^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
 
 if Qr1 > Control.Torque.Demanded
     Urated = Control.WindSpeed.Cutin;
@@ -47,7 +48,7 @@ else
     for iter = 1:100
         U_new = U1 + abs((Control.Torque.Demanded-Qr1)/(Qr1-Qr2))*(U2-U1);
         [~, CQr] = PerformanceCoefficients(Blade, Airfoil, Control.Pitch.Fine, (OmegaC/Drivetrain.Gearbox.Ratio)*Blade.Radius(end)/U_new);
-        Qr_new = 0.5*CQr*1.225*U_new^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
+        Qr_new = 0.5*CQr*AirDensity*U_new^2*pi*Blade.Radius(end)^3*Drivetrain.Gearbox.Efficiency/Drivetrain.Gearbox.Ratio;
         if abs((Qr_new - Control.Torque.Demanded)/Control.Torque.Demanded) < 0.005
             success = true;
             break
@@ -132,7 +133,10 @@ end
 Prated = Control.Torque.SpeedC*(2*pi/60) *  Control.Torque.Demanded * Drivetrain.Generator.Efficiency;
 
 % Drive train
-SpeedRange = [Control.Torque.SpeedB, Control.Torque.SpeedC]/Drivetrain.Gearbox.Ratio;
+disp('Searching for cut-in rotational speed at')
+[~, ~, OmegaU, ~] = SteadyState(Blade, Airfoil, Drivetrain, Control, Control.WindSpeed.Cutin, AirDensity);
+MinSpeedRPM = OmegaU * 60/(2*pi);
+SpeedRange = [MinSpeedRPM, Control.Torque.SpeedC/Drivetrain.Gearbox.Ratio];
 if Drivetrain.Gearbox.Ratio == 1
     DrivetrainType = 'Direct drive system';
 else
@@ -147,7 +151,8 @@ set(handles.Performance, 'Data', { ...
     'Cut-out wind speed:', [num2str(Control.WindSpeed.Cutout, '%2.1f'), ' m/s']; ...
     'Speed range:', [num2str(SpeedRange(1), '%2.1f'), ' - ', num2str(SpeedRange(2), '%2.1f'), ' rpm']; ...
     'Optimal tip speed ratio:', OptimalTSR; ...
-    'Peak power coefficient:', num2str(CPmax, '%2.3f')});
+    'Peak power coefficient:', num2str(CPmax, '%2.3f');
+    'Air Density', [num2str(AirDensity, '%4.3f'), ' kg/m^3' ]});
 set(handles.Configuration, 'Data', { ...
     'Number of blades:', int2str(Blade.Number); ...
     'Drivetrain:', DrivetrainType; ...
