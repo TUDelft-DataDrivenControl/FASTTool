@@ -7,7 +7,7 @@ The simulation back-end is based on NREL’s FAST v8.16, and is to date still un
 FASTTool provides the following key features:
 * Structural, drivetrain and controller design: Blade design allows to to radially specify the blade geometryand structural properties by defining the chord, twist and airfoil for each node, as well as the mass density, flap- and edgewise stiffness. The user can also edit airfoil properties or add new airfoils. A similar interface is provided for tower design. Parameters size the nacelle, and define the drivetrain by eﬃciencies, the gearbox ratio, and the generator inertia. The controller design interface allows to visually tune the pitch controller by loop shaping the system’s frequency responses. 
 * Steady-state rotor performance and modal analysis: Modal analyses can be performed on the tower fore-aft and side-side modes, along with the blade flap- and edgewise modes, and visualized using a Campbell diagram.
-* Linearization: The non-linear FAST model can be linearized at operating points of interest, and provides functionality finding tri, conditions.
+* Linearization: The non-linear FAST model can be linearized at operating points of interest, and provides functionality for finding trim conditions.
 * Wind load cases and simulation: Run certification simulations using various wind conditions, such as steady wind, stepped wind speed changes, a normal or extreme turbulence model.
 * Simulink-based controller and simulation environment: During a simulation run, calling FAST dynamic library by a Simulink S-Function, a controller that is provided by Simulink blocks is used, and is configured with information from the different interfaces.
 
