@@ -1,7 +1,9 @@
 extras
 subfunctions/inputfiles
 Output
+project_files/NREL5MW_tuned.mat
 slprj
+test
 *.autosave
 ownScripts/
 NREL5MW_tuned.mat
