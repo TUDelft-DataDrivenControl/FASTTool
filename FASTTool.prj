@@ -1,0 +1,143 @@
+<deployment-project plugin="plugin.apptool" plugin-version="1.0">
+  <configuration build-checksum="3325647633" file="C:\TUD\Tools - Macro's - Input files\FASTTool\Repository\FASTTool.prj" location="C:\TUD\Tools - Macro's - Input files\FASTTool\Repository" name="FASTTool" target="target.mlapps" target-name="Package App">
+    <param.appname>FASTTool</param.appname>
+    <param.authnamewatermark>Michiel Zaaijer</param.authnamewatermark>
+    <param.email />
+    <param.company />
+    <param.icon>${PROJECT_ROOT}\FASTTool_resources\icon_24.png</param.icon>
+    <param.icons>
+      <file>${PROJECT_ROOT}\FASTTool_resources\icon_48.png</file>
+      <file>${PROJECT_ROOT}\FASTTool_resources\icon_24.png</file>
+      <file>${PROJECT_ROOT}\FASTTool_resources\icon_16.png</file>
+    </param.icons>
+    <param.summary>Wind-turbine analysis tool</param.summary>
+    <param.description>Wind-turbine analysis tool using BEM for rotor performance and steady operating performance, BModes for modal analysis, transfer functions for linear control-assessment and FAST8 for simulations.</param.description>
+    <param.screenshot>${PROJECT_ROOT}\graphics\turbine.png</param.screenshot>
+    <param.version>2.1</param.version>
+    <param.products.name>
+      <item>MATLAB</item>
+      <item>Simulink</item>
+      <item>Control System Toolbox</item>
+    </param.products.name>
+    <param.products.id>
+      <item>1</item>
+      <item>2</item>
+      <item>3</item>
+    </param.products.id>
+    <param.products.version>
+      <item>24.2</item>
+      <item>24.2</item>
+      <item>24.2</item>
+    </param.products.version>
+    <param.platforms />
+    <param.output>${PROJECT_ROOT}</param.output>
+    <param.guid>9dbebd1b-0198-4f21-8bb3-9eedbaeb7a1a</param.guid>
+    <unset>
+      <param.email />
+      <param.company />
+      <param.platforms />
+      <param.output />
+    </unset>
+    <fileset.main>
+      <file>${PROJECT_ROOT}\FASTTool.mlapp</file>
+    </fileset.main>
+    <fileset.depfun>
+      <file>${PROJECT_ROOT}\AerofoilSpecs.mlapp</file>
+      <file>${PROJECT_ROOT}\Control1Specs.mlapp</file>
+      <file>${PROJECT_ROOT}\Control2Specs.mlapp</file>
+      <file>${PROJECT_ROOT}\ControlAnalysis.mlapp</file>
+      <file>${PROJECT_ROOT}\DrivetrainAndNacelleSpecs.mlapp</file>
+      <file>${PROJECT_ROOT}\FileIOClass.m</file>
+      <file>${PROJECT_ROOT}\graphics\background.png</file>
+      <file>${PROJECT_ROOT}\graphics\blades.png</file>
+      <file>${PROJECT_ROOT}\graphics\drivetrain_directdrive.png</file>
+      <file>${PROJECT_ROOT}\graphics\drivetrain_geared.png</file>
+      <file>${PROJECT_ROOT}\graphics\icon.png</file>
+      <file>${PROJECT_ROOT}\graphics\nacelle.png</file>
+      <file>${PROJECT_ROOT}\graphics\tower.png</file>
+      <file>${PROJECT_ROOT}\MergeDialogue.mlapp</file>
+      <file>${PROJECT_ROOT}\ModalAnalysis.mlapp</file>
+      <file>${PROJECT_ROOT}\ResultsAnalysis.mlapp</file>
+      <file>${PROJECT_ROOT}\RotorAnalysis.mlapp</file>
+      <file>${PROJECT_ROOT}\RotorSpecs.mlapp</file>
+      <file>${PROJECT_ROOT}\Simulation.mlapp</file>
+      <file>${PROJECT_ROOT}\SteadyOpAnalysis.mlapp</file>
+      <file>${PROJECT_ROOT}\TowerSpecs.mlapp</file>
+      <file>${PROJECT_ROOT}\VisualAnalysis.mlapp</file>
+      <file>${PROJECT_ROOT}\VisualAnalysis3D.mlapp</file>
+      <file>${PROJECT_ROOT}\WindTurbineClass.m</file>
+    </fileset.depfun>
+    <fileset.resources>
+      <file>${PROJECT_ROOT}\BModes.exe</file>
+      <file>${PROJECT_ROOT}\FAST.slx</file>
+      <file>${PROJECT_ROOT}\FAST_Library_x64.dll</file>
+      <file>${PROJECT_ROOT}\FAST_SFunc.mexw64</file>
+      <file>${PROJECT_ROOT}\functions</file>
+      <file>${PROJECT_ROOT}\MAP_x64.dll</file>
+      <file>${PROJECT_ROOT}\OpenLoop.slx</file>
+      <file>${PROJECT_ROOT}\OutList.mat</file>
+      <file>${PROJECT_ROOT}\TurbSim.exe</file>
+    </fileset.resources>
+    <fileset.package />
+    <build-deliverables>
+      <file location="C:\TUD\Tools - Macro's - Input files\FASTTool" name="Repository" optional="false">C:\TUD\Tools - Macro's - Input files\FASTTool\Repository</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>C:\Program Files\MATLAB\R2024b</root>
+      <toolboxes>
+        <toolbox name="matlabcoder" />
+        <toolbox name="embeddedcoder" />
+        <toolbox name="gpucoder" />
+        <toolbox name="fixedpoint" />
+        <toolbox name="matlabhdlcoder" />
+        <toolbox name="neuralnetwork" />
+      </toolboxes>
+      <toolbox>
+        <matlabcoder>
+          <enabled>true</enabled>
+        </matlabcoder>
+      </toolbox>
+      <toolbox>
+        <embeddedcoder>
+          <enabled>true</enabled>
+        </embeddedcoder>
+      </toolbox>
+      <toolbox>
+        <gpucoder>
+          <enabled>true</enabled>
+        </gpucoder>
+      </toolbox>
+      <toolbox>
+        <fixedpoint>
+          <enabled>true</enabled>
+        </fixedpoint>
+      </toolbox>
+      <toolbox>
+        <matlabhdlcoder>
+          <enabled>true</enabled>
+        </matlabhdlcoder>
+      </toolbox>
+      <toolbox>
+        <neuralnetwork>
+          <enabled>true</enabled>
+        </neuralnetwork>
+      </toolbox>
+    </matlab>
+    <platform>
+      <unix>false</unix>
+      <mac>false</mac>
+      <windows>true</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>10.0</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>win64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>
