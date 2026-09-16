@@ -11,6 +11,14 @@ FASTTool provides the following key features:
 * Wind load cases and simulation: Run certification simulations using various wind conditions, such as steady wind, stepped wind speed changes, a normal or extreme turbulence model.
 * Simulink-based controller and simulation environment: During a simulation run, calling FAST dynamic library by a Simulink S-Function, a controller that is provided by Simulink blocks is used, and is configured with information from the different interfaces.
 
+## Getting started
+To get started, you only need three files:
+* the Matlab App installation file FASTTool.mlappinstall, that you'll find in the root,
+* the project file NREL5MW.mat from the folder project_files, and
+* the user's guide in the docs folder to learn how to install and use the tool.
+
+To run FASTTool, you need Matlab, with Simulink and the Control System Toolbox. The current version of FASTTool is fully functional on Windows. On other operating systems the functionality is limited. More information about this can be found in the user's guide.
+
 ## Referencing
 When you use FASTTool in any publication, please cite the following paper:
 * Mulders, S.P. and Zaaijer, M.B. and Bos, R. and van Wingerden, J.W. "Wind turbine control: open-source software for control education, standardization and compilation". Journal of Physics: Conference Series. Vol. 1452. No. 1. IOP Publishing, 2020. [Link to the paper](https://iopscience.iop.org/article/10.1088/1742-6596/1452/1/012010)
